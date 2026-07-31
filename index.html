@@ -1,106 +1,1685 @@
-利润计算器
-看板
-净利润
-¥3,419.03
-售价
-¥6,999.00
-PV
-¥3,000.00
-产品成本
-¥104.00
-物流费合计
-¥27.99
-扣点合计
-¥444.95
-公司税
-¥3.03
-组合输入
-售价 (元)
-6999
-PV (元)
-3000
-总PV (元)
-6000000
-日均单量
-200
-产品组合
-选择	产品名	长×宽×高(cm)	重量(kg)	成本(元)	货运	入库	卸货	仓储	关护喷雾	数量
-	瞳光四面体	20×14×4.7	0.275	
-50
-0.0505	0.0067	0.0083	0.2	否	
-0
-	青禾头皮赋活精华	18.2×13.2×4.6	0.36	
-52
-0.0417	0.0067	0.0108	0.1333	否	
-2
-	舒悟空关护喷雾	3×5.5×9.5	0.05388	
-60
-0.0125	0.002	0.0008	0.0024	是	
-0
-	梵肤白美白套盒	20×14×4.7	0.4	
-50
-0.0505	0.0067	0.0083	0.2	否	
-0
-物流方式与目的地
-物流方式
-全部空运
-全部冷链陆运
-全部常温陆运
-全部精温
-精温+空运
-精温+冷链
-精温+常温陆运
-目的地 (省/区)
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>利润计算器 v8</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:"Microsoft YaHei","Segoe UI",sans-serif; background:#f0f2f5; color:#333; font-size:14px; }
+.container { max-width:1200px; margin:0 auto; padding:16px; }
+h1 { text-align:center; padding:12px 0; color:#1a1a2e; }
+h2 { padding:8px 12px; background:#e8ecf1; border-left:4px solid #4a6fa5; margin:12px 0 8px; border-radius:0 4px 4px 0; }
+h3 { padding:6px 0; color:#4a6fa5; }
 
-北京市 (首重23/续重13) 1800km [冷链组中部区（上海市、北京市、天津市等20地）]
-精温到达城市
+/* 看板 */
+.dashboard { display:grid; grid-template-columns:2fr 1fr 1fr 1fr 1fr 1fr 1fr; gap:8px; margin:12px 0; }
+.dash-card { background:#fff; border-radius:8px; padding:12px 8px; text-align:center; box-shadow:0 1px 3px rgba(0,0,0,.1); }
+.dash-card.primary { background:linear-gradient(135deg,#1a1a2e,#16213e); color:#fff; }
+.dash-card .label { font-size:12px; color:#888; margin-bottom:4px; }
+.dash-card.primary .label { color:#aaa; }
+.dash-card .value { font-size:20px; font-weight:bold; }
+.dash-card.primary .value { font-size:28px; color:#00d09c; }
+.dash-card .value.red { color:#e74c3c; }
+.dash-card .value.green { color:#27ae60; }
 
-哈尔滨市
-计算过程明细
-利润计算
-净利润 = 售价 − PV − 产品成本 − 扣点合计 − 公司税 − 物流费
-净利润 = ¥6,999.00 − ¥3,000.00 − ¥104.00 − ¥444.95 − ¥3.03 − ¥27.99
-净利润 = ¥3,419.03
+/* 输入区 */
+.section { background:#fff; border-radius:8px; padding:16px; margin:8px 0; box-shadow:0 1px 3px rgba(0,0,0,.08); }
+.row { display:flex; gap:12px; flex-wrap:wrap; align-items:flex-end; }
+.field { display:flex; flex-direction:column; gap:4px; }
+.field label { font-size:12px; color:#666; }
+.field input, .field select { padding:6px 10px; border:1px solid #ccc; border-radius:4px; font-size:14px; width:140px; }
+.field input:focus, .field select:focus { border-color:#4a6fa5; outline:none; }
 
-扣点明细
-品牌费 = PV × 总PV>5,000,000 → 高档1% = ¥3,000.00 × 1.0% = ¥30.00
-外事费 = PV × 1% = ¥3,000.00 × 1% = ¥30.00
-税费 = 售价 × 5.5% = ¥6,999.00 × 5.5% = ¥384.95
-扣点合计 = ¥444.95
+/* 产品表 */
+table { width:100%; border-collapse:collapse; margin:8px 0; }
+th,td { padding:6px 8px; border:1px solid #ddd; text-align:center; font-size:13px; }
+th { background:#f5f7fa; color:#4a6fa5; }
+td input { width:60px; text-align:center; border:1px solid #ccc; border-radius:3px; padding:2px 4px; }
 
-公司税
-基数 = 产品成本 / 1.13 = ¥104.00 / 1.13 = ¥92.04
-增值税及附加 = ¥92.04 × 5% × 13% × (1+12%) = ¥0.67
-所得税 = ¥92.04 × 5% × 5% = ¥0.23
-印花税 = 售价 × 0.03% + 产品成本 × 0.03% = ¥6,999.00 × 0.0003 + ¥104.00 × 0.0003 = ¥2.13
-公司税合计 = ¥3.03
+/* 明细 */
+.breakdown { background:#f9fafb; border-radius:6px; padding:12px; margin:8px 0; font-family:"Consolas","Courier New",monospace; font-size:13px; line-height:1.8; white-space:pre-wrap; }
+.breakdown .line { padding:2px 0; }
+.breakdown .header { font-weight:bold; color:#4a6fa5; border-bottom:1px solid #ddd; margin-bottom:4px; padding-bottom:4px; }
+.breakdown .result { color:#e74c3c; font-weight:bold; }
+.breakdown .green { color:#27ae60; }
 
-【空运部分】
-距成都距离: 1800km (≤2000km, 关护喷雾每箱4冰袋)
-冰袋规则: 关护喷雾每箱4个 | 普通产品每箱 2+⌊(盒数-1)/5⌋
-泡沫箱数: 1
-  箱1 [S1] 外尺寸29×17×19cm 内尺寸(壁厚2cm)
-    类型: 普通产品(含冰袋)
-    产品: 青禾头皮赋活精华×2盒
-    冰袋: 2个 (本箱2盒 → 2个) → 0.5kg, ¥1
-    产品重: 0.72kg, 泡沫箱重: 0.0719kg, 防水袋重: 0.01kg, 保温袋重: 0kg, 冰袋重: 0.5kg
-    箱实重: 1.3019kg, 箱抛重: 1.5612kg
-    包材(折扣前): 泡沫箱¥2 + 防水袋¥0.6 + 保温袋¥0 + 冰袋¥1 = ¥3.6
-合并实重: 1.3019kg
-合并抛重: 1.5612kg
-原始计费重量: max(1.3019, 1.5612) = 1.5612kg
-最终计费重量(取整): 1.6kg
-目的地组: 北京市
-日均档位: 无日均分层 (日均200票)
-首重费: 23元
-续重单价: 13元/kg
-运费 = (23 + max(0, 1.6 - 1) × 13) × 0.78 = ¥24.02
-包材合计(折扣前): ¥3.6 × 0.8 = ¥2.88
-仓运操作: 货运¥0.08 + 入库¥0.01 + 卸货¥0.02 + 仓储¥0.27 + 操作¥0.70 = ¥1.09
-空运物流费 = ¥27.99
-【总物流费】
-总物流费 = ¥27.99
+/* 设置 */
+.settings-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; }
+.setting-item { display:flex; align-items:center; gap:6px; }
+.setting-item label { font-size:12px; min-width:80px; }
+.setting-item input { width:80px; padding:4px 8px; border:1px solid #ccc; border-radius:4px; }
 
-重量汇总
-合并实重: 1.3019kg · 合并抛重: 1.5612kg · 计费重量(取整): 1.6kg
-扣点费率与折扣设置 展开/收起
+/* 按钮 */
+.btn { padding:8px 20px; border:none; border-radius:4px; cursor:pointer; font-size:14px; color:#fff; }
+.btn-primary { background:#4a6fa5; }
+.btn-primary:hover { background:#3a5a8a; }
+.btn-toggle { padding:4px 12px; font-size:12px; }
+.mode-btn { background:#e0e5ec; color:#666; padding:6px 14px; border:1px solid #ccc; border-radius:4px; cursor:pointer; font-size:13px; }
+.mode-btn.active { background:#4a6fa5; color:#fff; border-color:#4a6fa5; }
+.product-check { width:auto !important; }
+
+/* 弹窗 */
+.modal-overlay { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,.4); z-index:999; }
+.modal-overlay.show { display:flex; justify-content:center; align-items:center; }
+.modal { background:#fff; border-radius:8px; padding:20px; max-width:500px; width:90%; max-height:80vh; overflow-y:auto; }
+.modal h3 { margin-bottom:12px; }
+.modal .close-btn { float:right; cursor:pointer; font-size:20px; color:#999; }
+</style>
+</head>
+<body>
+<div class="container">
+<h1>利润计算器</h1>
+
+<!-- 看板 -->
+<h2>看板</h2>
+<div class="dashboard" id="dashboard">
+  <div class="dash-card primary"><div class="label">净利润</div><div class="value" id="d_netProfit">¥0.00</div></div>
+  <div class="dash-card"><div class="label">售价</div><div class="value" id="d_price">¥0</div></div>
+  <div class="dash-card"><div class="label">PV</div><div class="value" id="d_pv">¥0</div></div>
+  <div class="dash-card"><div class="label">产品成本</div><div class="value" id="d_cost">¥0</div></div>
+  <div class="dash-card"><div class="label">物流费合计</div><div class="value" id="d_logistics">¥0</div></div>
+  <div class="dash-card"><div class="label">扣点合计</div><div class="value" id="d_deductions">¥0</div></div>
+  <div class="dash-card"><div class="label">公司税</div><div class="value" id="d_tax">¥0</div></div>
+</div>
+
+<!-- 输入区 -->
+<div class="section">
+<h2>组合输入</h2>
+<div class="row">
+  <div class="field"><label>售价 (元)</label><input type="number" id="i_price" value="12999" step="0.01"></div>
+  <div class="field"><label>PV (元)</label><input type="number" id="i_pv" value="12000" step="0.01"></div>
+  <div class="field"><label>总PV (元)</label><input type="number" id="i_totalPV" value="6000000" step="1"></div>
+  <div class="field"><label>日均单量</label><input type="number" id="i_dailyVolume" value="200" step="1"></div>
+</div>
+</div>
+
+<!-- 产品组合 -->
+<div class="section">
+<h2>产品组合</h2>
+<table id="productTable">
+<thead><tr><th>选择</th><th>产品名</th><th>长×宽×高(cm)</th><th>重量(kg)</th><th>成本(元)</th><th>货运</th><th>入库</th><th>卸货</th><th>仓储</th><th>关护喷雾</th><th>数量</th></tr></thead>
+<tbody id="productTableBody"></tbody>
+</table>
+</div>
+
+<!-- 物流方式 -->
+<div class="section">
+<h2>物流方式与目的地</h2>
+<div class="row" style="margin-bottom:8px;">
+  <div class="field">
+    <label>物流方式</label>
+    <div style="display:flex;gap:4px;flex-wrap:wrap;">
+      <button class="mode-btn" data-mode="air" onclick="setMode('air')">全部空运</button>
+      <button class="mode-btn active" data-mode="coldChain" onclick="setMode('coldChain')">全部冷链陆运</button>
+      <button class="mode-btn" data-mode="normalRoad" onclick="setMode('normalRoad')">全部常温陆运</button>
+      <button class="mode-btn" data-mode="precision" onclick="setMode('precision')">全部精温</button>
+      <button class="mode-btn" data-mode="precision+air" onclick="setMode('precision+air')">精温+空运</button>
+      <button class="mode-btn" data-mode="precision+coldChain" onclick="setMode('precision+coldChain')">精温+冷链</button>
+      <button class="mode-btn" data-mode="precision+normalRoad" onclick="setMode('precision+normalRoad')">精温+常温陆运</button>
+    </div>
+  </div>
+</div>
+<div class="row">
+  <div class="field">
+    <label>目的地 (省/区)</label>
+    <select id="i_destination" onchange="onDestinationChange()" style="width:220px;"></select>
+  </div>
+  <div class="field" id="cityField" style="display:none;">
+    <label>精温到达城市</label>
+    <select id="i_precisionCity" style="width:180px;"></select>
+  </div>
+</div>
+</div>
+
+<!-- 计算明细 -->
+<div class="section">
+<h2>计算过程明细</h2>
+<div class="breakdown" id="breakdown"></div>
+</div>
+
+<!-- 设置 -->
+<div class="section">
+<h2>扣点费率与折扣设置 <button class="btn btn-toggle" onclick="toggleSettings()" style="margin-left:8px;">展开/收起</button></h2>
+<div id="settingsArea" style="display:none;">
+  <h3>扣点费率</h3>
+  <div class="settings-grid" id="deductionSettings"></div>
+  <h3 style="margin-top:12px;">折扣</h3>
+  <div class="settings-grid" id="discountSettings"></div>
+</div>
+</div>
+
+</div>
+
+<script>
+// ============================================================
+// 1. 种子数据
+// ============================================================
+const SEED = {
+  products: [
+    { id:0, name:"瞳光四面体",     L:20, W:14,  H:4.7,   weight:0.275,  cost:50, freight:0.0505, inbound:0.0067, unload:0.0083, storage:0.2000, isSpray:false },
+    { id:1, name:"青禾头皮赋活精华", L:18.2,W:13.2, H:4.6,   weight:0.36,   cost:52, freight:0.0417, inbound:0.0067, unload:0.0108, storage:0.1333, isSpray:false },
+    { id:2, name:"舒悟空关护喷雾",  L:3,  W:5.5, H:9.5,   weight:0.05388, cost:60, freight:0.0125, inbound:0.0020, unload:0.0008, storage:0.0024, isSpray:true  },
+    { id:3, name:"梵肤白美白套盒",  L:20, W:14,  H:4.7,   weight:0.4,    cost:50, freight:0.0505, inbound:0.0067, unload:0.0083, storage:0.2000, isSpray:false },
+  ],
+
+  // 泡沫箱 (外尺寸cm, 壁厚2cm)
+  // cap = 各产品「每箱最多可装盒数」(用户实测)：
+  //   qinghe(青禾头皮赋活): S2=3, S3=6, S4=7, S5=12, S6=16；S1=2 为估算待确认
+  //   tonghua(瞳光四面体/梵肤白美白, 尺寸同20×14×4.7): S2=3, S3=4, S4=5, S5=8, S6=14；S1=1 为估算待确认
+  // 混合装箱按"各产品占箱比例之和≤1"匹配；关护喷雾(保温袋)走体积折算兜底。
+  foamBoxes: [
+    { name:"S1", L:29, W:17,  H:19,  density:16, price:2.00, cap:{ qinghe:2,  tonghua:1 } },
+    { name:"S2", L:29, W:19,  H:24,  density:16, price:2.50, cap:{ qinghe:3,  tonghua:3 } },
+    { name:"S3", L:34, W:24,  H:21.5,density:18, price:3.50, cap:{ qinghe:6,  tonghua:4 } },
+    { name:"S4", L:34, W:24,  H:24,  density:18, price:4.00, cap:{ qinghe:7,  tonghua:5 } },
+    { name:"S5", L:42, W:30,  H:22,  density:20, price:5.50, cap:{ qinghe:12, tonghua:8 } },
+    { name:"S6", L:45, W:30,  H:29,  density:20, price:7.00, cap:{ qinghe:16, tonghua:14 } },
+  ],
+
+  // 保温袋 (仅关护喷雾)
+  insulationBags: [
+    { name:"S1", L:24.5, W:12.5, H:24.5, price:0.48 },
+    { name:"S2", L:24.5, W:13.5, H:30,   price:1.50 },
+    { name:"S4", L:29.5, W:19.5, H:33,   price:1.70 },
+    { name:"S5", L:37.5, W:25.5, H:34,   price:1.90 },
+    { name:"S6", L:40.5, W:25.5, H:43,   price:2.75 },
+  ],
+
+  // 防水袋
+  waterproofBag: { price:0.60, weight:0.01 },
+
+  // 冰袋
+  icePack: { weight:0.25, price:0.50, L:18, W:12, H:4 },
+
+  // 精温箱型库 (内尺寸cm, capacity=最大可装关护喷雾盒数, 为装到满的极限值)
+  precisionBoxes: [
+    { name:"EV-6",   L:19,   W:19,   H:18.5, capacity:36  },
+    { name:"EV-14",  L:27,   W:23.5, H:23,   capacity:80  },
+    { name:"EV-32",  L:35.5, W:30.5, H:30,   capacity:180 },
+    { name:"EV-60",  L:39.5, W:39.5, H:38,   capacity:340 },
+    { name:"EV-96",  L:46.5, W:46.5, H:45,   capacity:540 },
+    { name:"EV-128", L:66,   W:44.5, H:44,   capacity:782 },
+  ],
+
+  // 冷链陆运运费表: 目的地组 × 日均档位 → [首重费, 续重单价]
+  coldChainFreight: {
+    A: { "30-100":[8, 2],   "100-300":[7.5, 2],   "300+":[7, 1.5]   },
+    B: { "30-100":[9, 2],   "100-300":[8, 2],     "300+":[7.5, 1.8] },
+    C: { "30-100":[9, 2.5], "100-300":[8.5, 2.3], "300+":[8, 2]     },
+    D: { "30-100":[13, 8],  "100-300":[13, 8],    "300+":[13, 8]    },
+    E: { "30-100":[16, 10], "100-300":[16, 10],   "300+":[16, 10]   },
+  },
+
+  // 常温陆运运费表（顺丰特快）: 目的地组 × 日均档位 → [首重1kg费, 1-3kg续重(元/kg), >3kg续重(元/kg)]
+  normalRoadFreight: {
+    A: { "30-100":[7,   2,   2.5], "100-300":[6,   1.5, 2  ], "300+":[5.5, 1,   1.5] },
+    B: { "30-100":[7.5, 2.5, 3  ], "100-300":[6.5, 2,   2.5], "300+":[6,   1.5, 2  ] },
+    C: { "30-100":[8,   3,   4  ], "100-300":[7,   2.5, 3  ], "300+":[6.5, 2,   2.5] },
+    D: { "30-100":[10,  6,   7  ], "100-300":[9,   5,   6  ], "300+":[8,   4,   6  ] },
+    E: { "30-100":[13,  8,   10 ], "100-300":[13,  8,   10 ], "300+":[13,  8,   10 ] },
+  },
+
+  // 目的地组中文名（内部仍用 A/B/C/D/E 查表，显示用中文）
+  groupCN: { A:"川渝区", B:"近邻区", C:"中部区", D:"偏远区", E:"极偏远区" },
+
+  // 空运运费表: 省份/子区 → [首重费, 续重单价, 冷链组, 距成都距离(km)]
+  airFreight: [
+    { region:"上海市",          firstWeight:23, continuedWeight:13, group:"C",  distance:2050 },
+    { region:"北京市",          firstWeight:23, continuedWeight:13, group:"C",  distance:1800 },
+    { region:"天津市",          firstWeight:23, continuedWeight:13, group:"C",  distance:1800 },
+    { region:"山东",            firstWeight:23, continuedWeight:13, group:"C",  distance:1600 },
+    { region:"江苏",            firstWeight:23, continuedWeight:13, group:"C",  distance:1600 },
+    { region:"浙江",            firstWeight:23, continuedWeight:13, group:"C",  distance:1900 },
+    { region:"河南",            firstWeight:23, continuedWeight:13, group:"C",  distance:1200 },
+    { region:"福建",            firstWeight:23, continuedWeight:13, group:"D",  distance:2000 },
+    { region:"海南",            firstWeight:23, continuedWeight:13, group:"C",  distance:2200 },
+    { region:"广东",            firstWeight:23, continuedWeight:13, group:"C",  distance:2000 },
+    { region:"河北",            firstWeight:23, continuedWeight:13, group:"C",  distance:1500 },
+    { region:"湖南（除恩施）",   firstWeight:23, continuedWeight:13, group:"C",  distance:1200 },
+    { region:"湖南（恩施）",     firstWeight:23, continuedWeight:30, group:"C",  distance:600  },
+    { region:"内蒙古（9盟市）",  firstWeight:23, continuedWeight:13, group:"C",  distance:1800 },
+    { region:"内蒙古（呼伦贝尔）",firstWeight:23, continuedWeight:18, group:"C",  distance:3800 },
+    { region:"吉林",            firstWeight:23, continuedWeight:18, group:"D",  distance:2900 },
+    { region:"黑龙江",          firstWeight:23, continuedWeight:18, group:"E",  distance:3300 },
+    { region:"新疆（偏远）",     firstWeight:23, continuedWeight:18, group:"D",  distance:2800 },
+    { region:"辽宁（部分）",     firstWeight:22, continuedWeight:13, group:"D",  distance:2500 },
+    { region:"陕西（部分）",     firstWeight:22, continuedWeight:8,  group:"B",  distance:720  },
+    { region:"西藏",            firstWeight:22, continuedWeight:35, group:null, distance:2100 },
+    { region:"江西",            firstWeight:23, continuedWeight:20, group:"C",  distance:1600 },
+    { region:"山西",            firstWeight:23, continuedWeight:20, group:"C",  distance:1300 },
+    { region:"宁夏",            firstWeight:23, continuedWeight:20, group:"C",  distance:1400 },
+    { region:"甘肃",            firstWeight:23, continuedWeight:30, group:"B",  distance:950  },
+    { region:"青海",            firstWeight:23, continuedWeight:30, group:"B",  distance:1200 },
+    { region:"贵州",            firstWeight:23, continuedWeight:30, group:"B",  distance:700  },
+    { region:"安徽",            firstWeight:23, continuedWeight:30, group:"C",  distance:1500 },
+    { region:"广西（13市）",     firstWeight:23, continuedWeight:30, group:"C",  distance:1500 },
+    { region:"湖北（黄冈等10市）",firstWeight:23, continuedWeight:30, group:"C",  distance:1100 },
+    { region:"云南（偏远13市州）",firstWeight:23, continuedWeight:30, group:"B",  distance:1100 },
+    { region:"四川",            firstWeight:23, continuedWeight:13, group:"A",  distance:0    },
+    { region:"重庆",            firstWeight:23, continuedWeight:13, group:"A",  distance:300  },
+  ],
+
+  // 精温运费表: 城市 → {箱型: 运费}
+  precisionFreight: {
+    "成都市":   { "EV-6":117, "EV-14":156, "EV-32":349, "EV-60":448, "EV-96":601, "EV-128":691 },
+    "重庆市":   { "EV-6":143, "EV-14":182, "EV-32":494, "EV-60":648, "EV-96":886, "EV-128":1026 },
+    "眉山市":   { "EV-6":117, "EV-14":156, "EV-32":349, "EV-60":448, "EV-96":601, "EV-128":691 },
+    "资阳市":   { "EV-6":117, "EV-14":156, "EV-32":349, "EV-60":448, "EV-96":601, "EV-128":691 },
+    "北京市":   { "EV-6":234, "EV-14":312, "EV-32":661, "EV-60":820, "EV-96":1065,"EV-128":1209 },
+    "上海市":   { "EV-6":234, "EV-14":312, "EV-32":661, "EV-60":820, "EV-96":1065,"EV-128":1209 },
+    "广州市":   { "EV-6":234, "EV-14":312, "EV-32":661, "EV-60":820, "EV-96":1065,"EV-128":1209 },
+    "深圳市":   { "EV-6":234, "EV-14":312, "EV-32":661, "EV-60":820, "EV-96":1065,"EV-128":1209 },
+    "武汉市":   { "EV-6":182, "EV-14":234, "EV-32":681, "EV-60":840, "EV-96":1085,"EV-128":1229 },
+    "长沙市":   { "EV-6":182, "EV-14":234, "EV-32":681, "EV-60":840, "EV-96":1085,"EV-128":1229 },
+    "西安市":   { "EV-6":182, "EV-14":234, "EV-32":681, "EV-60":840, "EV-96":1085,"EV-128":1229 },
+    "咸阳市":   { "EV-6":182, "EV-14":234, "EV-32":681, "EV-60":840, "EV-96":1085,"EV-128":1229 },
+    "哈尔滨市": { "EV-6":"×", "EV-14":"×","EV-32":711, "EV-60":870, "EV-96":1115,"EV-128":1259 },
+    "长春市":   { "EV-6":"×", "EV-14":"×","EV-32":711, "EV-60":870, "EV-96":1115,"EV-128":1259 },
+    "乌鲁木齐市":{"EV-6":"×", "EV-14":"×","EV-32":711, "EV-60":870, "EV-96":1115,"EV-128":1259 },
+  },
+
+  // 扣点费率默认值
+  deductionRates: {
+    brandLow:    0.02,   // 总PV ≤ 门槛
+    brandHigh:   0.01,   // 总PV > 门槛
+    pvThreshold: 5000000,
+    foreignAffairs: 0.01,
+    taxRate:     0.055,
+  },
+
+  // 折扣默认值
+  discounts: {
+    packaging:  0.8,   // 包材综合折扣
+    coldChain:  1.0,   // 冷链陆运运费折扣
+    air:        0.78,  // 空运运费折扣
+    precision:  0.65,  // 精温运费折扣
+    normalRoad: 1.0,   // 常温陆运运费折扣
+  },
+
+  // 泡沫箱壁厚
+  wallThickness: 2,
+
+  // 抛重系数
+  volumetricDivisor: 6000,
+};
+
+// ============================================================
+// 2. 状态管理
+// ============================================================
+let state = {
+  price: 12999,
+  pv: 12000,
+  totalPV: 6000000,
+  dailyVolume: 200,
+  productSelections: {},  // {productId: qty}
+  logisticsMode: "coldChain",
+  destination: null,      // airFreight entry index
+  precisionCity: "成都市",
+  deductionRates: { ...SEED.deductionRates },
+  discounts: { ...SEED.discounts },
+};
+
+// ============================================================
+// 3. 工具函数
+// ============================================================
+function r2(v) { return Math.round(v * 100) / 100; }
+function r4(v) { return Math.round(v * 10000) / 10000; }
+function fmt(v) { return "¥" + r2(v).toLocaleString("zh-CN", {minimumFractionDigits:2, maximumFractionDigits:2}); }
+
+// 按组聚合对应城市/地区（去重保序）
+function groupCityList(group) {
+  if (!group || !SEED.groupCN[group]) return [];
+  const seen = new Set(), list = [];
+  for (const e of SEED.airFreight) {
+    if (e.group === group && !seen.has(e.region)) { seen.add(e.region); list.push(e.region); }
+  }
+  return list;
+}
+
+// 按名称聚合产品列表，返回 "名称×N盒, 名称×M盒" 格式
+function fmtProducts(products) {
+  if (!products || products.length === 0) return "";
+  const map = {};
+  const result = [];
+  for (const p of products) {
+    if (map[p.name] !== undefined) {
+      result[map[p.name]].qty += p.qty;
+    } else {
+      map[p.name] = result.length;
+      result.push({ name: p.name, qty: p.qty });
+    }
+  }
+  return result.map(x => x.name + "×" + x.qty + "盒").join(", ");
+}
+
+// 排序维度（大到小）
+function sortDims(L, W, H) {
+  return [L, W, H].sort((a, b) => b - a);
+}
+
+// 检查产品是否能装入箱（按最大维度匹配，允许旋转）
+function fitsInBox(prodL, prodW, prodH, boxL, boxW, boxH) {
+  const [p1, p2, p3] = sortDims(prodL, prodW, prodH);
+  const [b1, b2, b3] = sortDims(boxL, boxW, boxH);
+  return p1 <= b1 && p2 <= b2 && p3 <= b3;
+}
+
+// 真实 3D 摆放检查：把每件产品(按 qty 展开为单件)与冰袋(实体)按实际长宽高摆入箱内，
+// 允许 6 种旋转，贪心 extreme-point 装箱，全部摆下才认为装得下。
+// 喷雾在非精温模式下已被 packSprayProducts 预先装进保温袋(实体单元)，与本函数无关；
+// 这里只负责把"待装单元(可能含保温袋) + 冰袋"真实摆放进泡沫箱。
+function _pack3DTry(inst, bin) {
+  const placed = [];
+  let eps = [{ x: 0, y: 0, z: 0 }];
+  for (const item of inst) {
+    const orients = [
+      { L: item.L, W: item.W, H: item.H },
+      { L: item.L, W: item.H, H: item.W },
+      { L: item.W, W: item.L, H: item.H },
+      { L: item.W, W: item.H, H: item.L },
+      { L: item.H, W: item.L, H: item.W },
+      { L: item.H, W: item.W, H: item.L },
+    ];
+    // 优先低 z → 低 y → 低 x
+    const sortedEps = eps.slice().sort((a, b) => a.z - b.z || a.y - b.y || a.x - b.x);
+    let done = false;
+    for (const ep of sortedEps) {
+      for (const o of orients) {
+        if (ep.x + o.L > bin.L || ep.y + o.W > bin.W || ep.z + o.H > bin.H) continue;
+        let overlap = false;
+        for (const p of placed) {
+          if (ep.x < p.x + p.L && ep.x + o.L > p.x &&
+              ep.y < p.y + p.W && ep.y + o.W > p.y &&
+              ep.z < p.z + p.H && ep.z + o.H > p.z) { overlap = true; break; }
+        }
+        if (overlap) continue;
+        placed.push({ x: ep.x, y: ep.y, z: ep.z, L: o.L, W: o.W, H: o.H });
+        eps.push({ x: ep.x + o.L, y: ep.y, z: ep.z });
+        eps.push({ x: ep.x, y: ep.y + o.W, z: ep.z });
+        eps.push({ x: ep.x, y: ep.y, z: ep.z + o.H });
+        done = true;
+        break;
+      }
+      if (done) break;
+    }
+    if (!done) return false;
+  }
+  return true;
+}
+
+function pack3DItems(items, bin, icePackCount) {
+  icePackCount = icePackCount || 0;
+  const base = [];
+  for (const it of items) {
+    const q = it.qty || 1;
+    for (let k = 0; k < q; k++) base.push({ L: it.L, W: it.W, H: it.H });
+  }
+  for (let k = 0; k < icePackCount; k++) {
+    base.push({ L: SEED.icePack.L, W: SEED.icePack.W, H: SEED.icePack.H });
+  }
+  if (base.length === 0) return true;
+
+  // 分层平铺 (shelf packing)：逐层在箱底面用空闲矩形(guillotine)平铺，
+  // 层高取本层最高件；试多种排序取能装最多件的，避免过于保守。结果保守(不虚报能装)。
+  const byHdesc = (a, b) => b.H - a.H;
+  const maxDim  = (a, b) => Math.max(b.L, b.W, b.H) - Math.max(a.L, a.W, a.H);
+  const minDim  = (a, b) => Math.max(a.L, a.W, a.H) - Math.max(b.L, b.W, b.H);
+  const volDesc = (a, b) => (a.L * a.W * a.H) - (b.L * b.W * b.H);
+  const total = base.length;
+  for (const key of [byHdesc, maxDim, minDim, volDesc]) {
+    if (shelfPack(base.slice().sort(key), bin) >= total) return true;
+  }
+  return false;
+}
+
+// 分层平铺放置：返回能放下的件数（保守估计，不会虚报能装）
+function shelfPack(items, bin) {
+  const BL = bin.L, BW = bin.W, BH = bin.H;
+  let layerBottom = 0, layerH = 0;
+  let free = [{ x: 0, y: 0, w: BL, h: BW }];
+  let placed = 0, i = 0;
+  while (i < items.length) {
+    const it = items[i];
+    if (it.L > BL || it.W > BW) { i++; continue; }            // 单件底面超箱，跳过
+    let ri = -1;
+    for (let r = 0; r < free.length; r++) {
+      if (free[r].w >= it.L && free[r].h >= it.W) { ri = r; break; }
+    }
+    if (ri >= 0) {
+      const fr = free[ri];
+      free.splice(ri, 1);
+      const rightW = fr.w - it.L, rightH = fr.h;
+      const topW = it.L, topH = fr.h - it.W;
+      if (rightW > 0 && rightH > 0) free.push({ x: fr.x + it.L, y: fr.y, w: rightW, h: rightH });
+      if (topW > 0 && topH > 0) free.push({ x: fr.x, y: fr.y + it.W, w: topW, h: topH });
+      layerH = Math.max(layerH, it.H);
+      placed++; i++;
+      continue;
+    }
+    // 当前层放不下 → 开新层
+    const newBottom = layerBottom + layerH;
+    if (newBottom + it.H > BH) { i++; continue; }            // 这件高过剩余高度，跳过(保守)
+    layerBottom = newBottom; layerH = 0;
+    free = [{ x: 0, y: 0, w: BL, h: BW }];
+    // 不 i++，下一轮把 it 放入新层
+  }
+  return placed;
+}
+
+// 检查一组产品能否装入箱（按真实 3D 尺寸摆放，可选考虑冰袋实体占用空间）
+function groupFitsInBox(products, boxL, boxW, boxH, icePackCount) {
+  icePackCount = icePackCount || 0;
+  const [b1, b2, b3] = sortDims(boxL, boxW, boxH);
+  // 单件最大维度必须能进箱（必要前提）
+  for (const p of products) {
+    const [p1, p2, p3] = sortDims(p.L, p.W, p.H);
+    if (p1 > b1 || p2 > b2 || p3 > b3) return false;
+  }
+  // 冰袋本身必须能放入箱内
+  if (icePackCount > 0) {
+    const [i1, i2, i3] = sortDims(SEED.icePack.L, SEED.icePack.W, SEED.icePack.H);
+    if (i1 > b1 || i2 > b2 || i3 > b3) return false;
+  }
+  // 真实 3D 摆放：两套算法取并集——分层平铺(shelfPack) 与 极端点贪心(_pack3DTry) 任一能装即算能装。
+  // 比单用分层平铺更贴近实际打包(如扁盒旋转进小箱)，且两算法都是"真摆下才返回true"，不会虚报能装。
+  return pack3DItems(products, { L: boxL, W: boxW, H: boxH }, icePackCount) ||
+         groupFitsInBoxExact(products, boxL, boxW, boxH, icePackCount);
+}
+
+// 精温"组合订单"尺寸匹配：用极端点贪心(_pack3DTry)按真实 3D 摆放（允许在已放件上方空隙塞小件），
+// 比分层平铺(shelfPack)更贴近实际打包，避免对"扁盒夹高件"这类组合过度保守（如关护+美白+瞳光+青禾误判装不下）。
+function groupFitsInBoxExact(products, boxL, boxW, boxH, icePackCount) {
+  icePackCount = icePackCount || 0;
+  const [b1, b2, b3] = sortDims(boxL, boxW, boxH);
+  for (const p of products) {
+    const [p1, p2, p3] = sortDims(p.L, p.W, p.H);
+    if (p1 > b1 || p2 > b2 || p3 > b3) return false;
+  }
+  if (icePackCount > 0) {
+    const [i1, i2, i3] = sortDims(SEED.icePack.L, SEED.icePack.W, SEED.icePack.H);
+    if (i1 > b1 || i2 > b2 || i3 > b3) return false;
+  }
+  const base = [];
+  for (const it of products) { const q = it.qty || 1; for (let k = 0; k < q; k++) base.push({ L: it.L, W: it.W, H: it.H }); }
+  for (let k = 0; k < icePackCount; k++) base.push({ L: SEED.icePack.L, W: SEED.icePack.W, H: SEED.icePack.H });
+  if (base.length === 0) return true;
+  const byHdesc = (a, b) => b.H - a.H;
+  const maxDim  = (a, b) => Math.max(b.L, b.W, b.H) - Math.max(a.L, a.W, a.H);
+  const minDim  = (a, b) => Math.max(a.L, a.W, a.H) - Math.max(b.L, b.W, b.H);
+  const volDesc = (a, b) => (a.L * a.W * a.H) - (b.L * b.W * b.H);
+  for (const key of [byHdesc, maxDim, minDim, volDesc]) {
+    if (_pack3DTry(base.slice().sort(key), { L: boxL, W: boxW, H: boxH })) return true;
+  }
+  return false;
+}
+
+// 获取泡沫箱内尺寸
+function getInnerDims(box) {
+  const t = SEED.wallThickness;
+  return { L: box.L - 2*t, W: box.W - 2*t, H: box.H - 2*t };
+}
+
+// 获取泡沫箱外体积 (m³)
+function getOuterVolumeM3(box) {
+  return (box.L * box.W * box.H) / 1e6;
+}
+
+// 获取泡沫箱内体积 (m³)
+function getInnerVolumeM3(box) {
+  const inner = getInnerDims(box);
+  return (inner.L * inner.W * inner.H) / 1e6;
+}
+
+// 获取泡沫箱重量 (kg)
+function getFoamBoxWeight(box) {
+  const density = box.density; // kg/m³
+  const outerVol = getOuterVolumeM3(box);
+  const innerVol = getInnerVolumeM3(box);
+  return density * (outerVol - innerVol);
+}
+
+// 计费重量取整
+function roundChargeableWeight(w) {
+  if (w <= 10) {
+    return Math.ceil(w * 10) / 10;
+  } else {
+    return Math.ceil(w * 2) / 2;
+  }
+}
+
+// 获取日均档位
+function getDailyTier(dailyVol) {
+  if (dailyVol < 30) return "30-100";
+  if (dailyVol <= 100) return "30-100";
+  if (dailyVol <= 300) return "100-300";
+  return "300+";
+}
+
+// 获取距成都距离(km)
+function getDestinationDistance() {
+  if (state.destination) return state.destination.distance || 0;
+  return 0;
+}
+
+// 关护喷雾冰袋数: 4个基础, 距成都>2000km则5个
+function calcSprayIcePacks(distance) {
+  return distance > 2000 ? 5 : 4;
+}
+
+// 普通产品冰袋数（按每箱盒数）: ≤5盒=2, 6-10盒=3, 11-15盒=4, 16-20盒=5...
+// 即 2 + 每满5盒加1；距成都>2000km 在此基础上再+1
+function calcNormalIcePacks(qtyInBox, distance) {
+  if (qtyInBox <= 0) return 0;
+  let n = 2 + Math.floor((qtyInBox - 1) / 5);
+  if (distance > 2000) n += 1;
+  return n;
+}
+
+// ============================================================
+// 4. 核心算法
+// ============================================================
+
+// --- 4.1 产品成本 ---
+function calcProductCost() {
+  let cost = 0;
+  for (const p of SEED.products) {
+    const qty = state.productSelections[p.id] || 0;
+    if (qty > 0) cost += p.cost * qty;
+  }
+  return r2(cost);
+}
+
+// --- 4.2 扣点 ---
+function calcDeductions() {
+  const pv = state.pv;
+  const totalPV = state.totalPV;
+  const r = state.deductionRates;
+
+  const brandRate = totalPV > r.pvThreshold ? r.brandHigh : r.brandLow;
+  const brandFee = pv * brandRate;
+  const foreignFee = pv * r.foreignAffairs;
+  const taxFee = state.price * r.taxRate;
+  const total = brandFee + foreignFee + taxFee;
+
+  return {
+    brandRate, brandFee, foreignFee, taxFee, total: r2(total)
+  };
+}
+
+// --- 4.3 公司税 ---
+function calcCompanyTax(productCost, price) {
+  const base = productCost / 1.13;                        // 基数 = 产品成本 / 1.13
+  const vatAndSurtax = base * 0.05 * 0.13 * 1.12;         // 增值税及附加 = 基数 × 5% × 13% × (1+12%)
+  const incomeTax = base * 0.05 * 0.05;                   // 所得税 = 基数 × 5% × 5%
+  const stampTax = price * 0.0003 + productCost * 0.0003;  // 印花税 = 售价×万分之3 + 产品成本×万分之3
+  return r2(vatAndSurtax + incomeTax + stampTax);
+}
+
+// --- 4.4 获取选中产品列表 ---
+function getSelectedProducts() {
+  const result = { spray: [], normal: [], all: [] };
+  for (const p of SEED.products) {
+    const qty = state.productSelections[p.id] || 0;
+    if (qty > 0) {
+      const item = { ...p, qty };
+      result.all.push(item);
+      if (p.isSpray) result.spray.push(item);
+      else result.normal.push(item);
+    }
+  }
+  return result;
+}
+
+// --- 4.5 仓运操作（货运+入库+卸货+仓储+操作）---
+function calcHandling(products, includeOperation) {
+  let freight = 0, inbound = 0, unload = 0, storage = 0;
+  let totalUnits = 0;
+
+  for (const p of products) {
+    freight += p.freight * p.qty;
+    inbound += p.inbound * p.qty;
+    unload  += p.unload * p.qty;
+    storage += p.storage * p.qty;
+    totalUnits += p.qty;
+  }
+
+  let operation = 0;
+  if (includeOperation) {
+    operation = 0.7 + 0.1 * Math.max(0, totalUnits - 3);
+  }
+
+  const total = freight + inbound + unload + storage + operation;
+  return { freight: r2(freight), inbound: r2(inbound), unload: r2(unload), storage: r2(storage), operation: r2(operation), total: r2(total), totalUnits };
+}
+
+// --- 4.6 泡沫箱选箱算法 ---
+// 选泡沫箱：最优装箱（first-fit-decreasing + 自适应箱型）
+// 泡沫箱选箱：按「每箱最多可装盒数」容量匹配（替换原3D摆放）。
+// 用户实测每箱最多可装 N 盒某产品，据此匹配最小能装下的箱型；
+// 混装时按"各产品占箱比例之和 ≤ 1"匹配（比例 = 该箱产品盒数 / 该箱该产品容量）。
+// 关护喷雾(保温袋)无实测容量，按体积折算到青禾容量兜底。
+// 冰袋不计入选箱，仍算进包材与重量。
+function selectFoamBoxes(products) {
+  if (products.length === 0) return [];
+  const QINGHE_VOL = 18.2 * 13.2 * 4.6; // 单盒头皮赋活体积，喷雾折算基准
+
+  // 产品 → 容量类别
+  const capKey = (p) => {
+    if (p.id === 1) return "qinghe";          // 青禾头皮赋活精华
+    if (p.id === 0 || p.id === 3) return "tonghua"; // 瞳光四面体 / 梵肤白美白
+    return "fallback";                        // 关护喷雾保温袋等
+  };
+
+  // 单件(或聚合产品)对某个箱的"占箱比例"
+  const itemFrac = (p, box) => {
+    const k = capKey(p);
+    if (k === "qinghe") return (p.qty || 1) / box.cap.qinghe;
+    if (k === "tonghua") return (p.qty || 1) / box.cap.tonghua;
+    // 兜底：喷雾保温袋按体积折算到青禾容量（沿用旧模型）
+    return (p.L * p.W * p.H) / QINGHE_VOL / box.cap.qinghe;
+  };
+
+  const totalFrac = (box, items) => {
+    let s = 0; for (const it of items) s += itemFrac(it, box); return s;
+  };
+  // 找能装下 items 的最小箱型（比例之和 ≤ 1）
+  const smallestBoxForFrac = (items) => {
+    for (const box of SEED.foamBoxes) if (totalFrac(box, items) <= 1 + 1e-9) return box;
+    return null; // 连最大箱都装不下 → 上层用最大箱兜底
+  };
+
+  // 展开为单件列表（每件 qty:1）
+  const units = [];
+  for (const p of products) for (let k = 0; k < p.qty; k++) units.push({ ...p, qty: 1 });
+
+  // 单箱能否装下全部（选最小能装下的箱）
+  for (const box of SEED.foamBoxes) {
+    if (totalFrac(box, units) <= 1 + 1e-9) return [{ box, products: [...products] }];
+  }
+
+  // 多箱：大件优先，first-fit 按占箱比例填装
+  units.sort((a, b) => (b.L * b.W * b.H) - (a.L * a.W * a.H));
+  const openBoxes = [];
+  for (const unit of units) {
+    let placed = false;
+    for (const ob of openBoxes) {
+      const tentative = [...ob.items, unit];
+      const bx = smallestBoxForFrac(tentative);
+      if (bx) { ob.items = tentative; ob.box = bx; placed = true; break; }
+    }
+    if (!placed) {
+      const bx = smallestBoxForFrac([unit]) || SEED.foamBoxes[SEED.foamBoxes.length - 1];
+      openBoxes.push({ box: bx, items: [unit] });
+    }
+  }
+  const boxes = [];
+  for (const ob of openBoxes) {
+    const agg = {}; const order = [];
+    for (const it of ob.items) {
+      if (agg[it.name] === undefined) { agg[it.name] = { ...it, qty: 0 }; order.push(it.name); }
+      agg[it.name].qty += 1;
+    }
+    boxes.push({ box: ob.box, products: order.map(n => agg[n]) });
+  }
+  return boxes;
+}
+
+// --- 4.7 保温袋选袋算法（仅关护喷雾）---
+function selectInsulationBags(sprayProducts) {
+  if (sprayProducts.length === 0) return [];
+
+  // 尝试用单个袋装下所有关护喷雾
+  for (const bag of SEED.insulationBags) {
+    if (groupFitsInBox(sprayProducts, bag.L, bag.W, bag.H)) {
+      return [{ bag, products: [...sprayProducts] }];
+    }
+  }
+
+  // 一个袋装不下 → 用两个袋
+  const maxBag = SEED.insulationBags[SEED.insulationBags.length - 1];
+  const maxVol = maxBag.L * maxBag.W * maxBag.H * 0.85;
+  let totalVol = 0;
+  for (const p of sprayProducts) {
+    totalVol += p.L * p.W * p.H * p.qty;
+  }
+  let numBags = Math.ceil(totalVol / maxVol);
+  if (numBags < 1) numBags = 1;
+
+  // 均分
+  const bags = [];
+  const productsCopy = sprayProducts.map(p => ({ ...p }));
+  for (let i = 0; i < numBags; i++) {
+    const bagProducts = [];
+    let bagVol = 0;
+    for (let j = 0; j < productsCopy.length; j++) {
+      if (productsCopy[j].qty <= 0) continue;
+      const unitVol = productsCopy[j].L * productsCopy[j].W * productsCopy[j].H;
+      while (productsCopy[j].qty > 0 && bagVol + unitVol <= maxVol) {
+        bagProducts.push({ ...productsCopy[j], qty: 1 });
+        productsCopy[j].qty--;
+        bagVol += unitVol;
+      }
+    }
+    if (bagProducts.length > 0) {
+      bags.push({ bag: maxBag, products: bagProducts });
+    }
+  }
+  return bags;
+}
+
+// --- 4.8a 关护喷雾打包（保温袋→泡沫箱含冰袋→防水袋）---
+function packSprayProducts(sprayProducts, distance) {
+  distance = distance || 0;
+  const boxes = [];
+  if (sprayProducts.length === 0) return boxes;
+
+  // Step1: 选保温袋
+  const bags = selectInsulationBags(sprayProducts);
+
+  // Step2: 把保温袋当作"产品"装入泡沫箱
+  const bagProducts = bags.map(b => ({
+    L: b.bag.L, W: b.bag.W, H: b.bag.H,
+    weight: 0.1,
+    qty: 1,
+    _bag: b.bag,
+    _sprayProducts: b.products,
+  }));
+
+  // 关护喷雾冰袋数: 4个(距成都>2000km则5个)
+  const icePackCount = calcSprayIcePacks(distance);
+
+  const foamBoxes = selectFoamBoxes(bagProducts);
+
+  for (const fb of foamBoxes) {
+    const boxSprayProducts = [];
+    let boxProductWeight = 0;
+    for (const bp of fb.products) {
+      if (bp._sprayProducts) {
+        for (const sp of bp._sprayProducts) {
+          boxSprayProducts.push(sp);
+          boxProductWeight += sp.weight * sp.qty;
+        }
+      }
+    }
+
+    boxes.push({
+      box: fb.box,
+      type: "spray",
+      sprayProducts: boxSprayProducts,
+      insulationBags: fb.products.filter(p => p._bag).map(p => p._bag),
+      icePackCount,
+      icePackReason: distance > 2000 ? `距成都${distance}km>2000 → 5个` : `距成都${distance}km ≤2000 → 4个`,
+      waterproofBag: true,
+    });
+  }
+  return boxes;
+}
+
+// --- 4.8b 普通产品打包（防水袋→泡沫箱，空运/冷链均加冰袋）---
+function packNormalProducts(normalProducts, useIcePacks, distance) {
+  const boxes = [];
+  if (normalProducts.length === 0) return boxes;
+
+  if (!useIcePacks) {
+    // 无冰袋
+    const foamBoxes = selectFoamBoxes(normalProducts);
+    for (const fb of foamBoxes) {
+      boxes.push({
+        box: fb.box, type: "normal", normalProducts: fb.products,
+        insulationBags: [], icePackCount: 0, icePackReason: "无冰袋",
+        waterproofBag: true,
+      });
+    }
+    return boxes;
+  }
+
+  // 有冰袋：选箱按产品等效盒数（冰袋不计选箱，按你实测纯产品盒数）；冰袋仍算进包材与重量
+  const foamBoxes = selectFoamBoxes(normalProducts);
+
+  // 逐箱计算实际冰袋数
+  for (const fb of foamBoxes) {
+    let boxQty = 0;
+    for (const p of fb.products) boxQty += p.qty;
+    const actualIcePacks = calcNormalIcePacks(boxQty, distance);
+    boxes.push({
+      box: fb.box, type: "normal", normalProducts: fb.products,
+      insulationBags: [], icePackCount: actualIcePacks,
+      icePackReason: `本箱${boxQty}盒 → ${actualIcePacks}个${distance > 2000 ? '(距成都>2000km+1)' : ''}`,
+      waterproofBag: true,
+    });
+  }
+  return boxes;
+}
+
+// --- 4.8c 混合打包：所有产品一起装箱（保温袋+普通产品合入同一泡沫箱）---
+function calcMixedPacking(allProducts, useIcePacks, distance) {
+  const spray = allProducts.filter(p => p.isSpray);
+  const normal = allProducts.filter(p => !p.isSpray);
+
+  // 只有一种类型时走专用路径
+  if (spray.length === 0) return packNormalProducts(normal, useIcePacks, distance);
+  if (normal.length === 0) return packSprayProducts(spray, distance);
+
+  // 两种类型都有 → 合装
+  // Step1: 关护喷雾先装保温袋
+  const bags = selectInsulationBags(spray);
+  const bagItems = bags.map(b => ({
+    L: b.bag.L, W: b.bag.W, H: b.bag.H,
+    weight: 0.1, qty: 1,
+    _bag: b.bag, _sprayProducts: b.products,
+  }));
+
+  // Step2: 保温袋 + 普通产品 合并为待装列表
+  const combinedItems = [...bagItems, ...normal];
+
+  // Step3: 估算冰袋总数（用于逐箱复核，选箱改用每箱实时计算）
+  let totalNormalQty = 0;
+  for (const p of normal) totalNormalQty += p.qty;
+  const estSprayIce = calcSprayIcePacks(distance);
+  const estNormalIce = calcNormalIcePacks(totalNormalQty, distance);
+  const estimatedIcePacks = estSprayIce + estNormalIce;
+
+  // Step4: 选泡沫箱（先试一箱，装不下再拆；每箱按自身冰袋数计算）
+  const foamBoxes = selectFoamBoxes(combinedItems);
+
+  // Step5: 逐箱计算实际冰袋
+  const boxes = [];
+  for (const fb of foamBoxes) {
+    const hasSpray = fb.products.some(p => p._sprayProducts);
+    const hasNormal = fb.products.some(p => !p._sprayProducts);
+
+    let sprayIce = 0, normalIce = 0;
+    const reasons = [];
+
+    if (hasSpray) {
+      sprayIce = calcSprayIcePacks(distance);
+      reasons.push(`关护喷雾${sprayIce}个(${distance > 2000 ? '>2000km' : '≤2000km'})`);
+    }
+    if (hasNormal) {
+      let boxNormalQty = 0;
+      for (const p of fb.products) {
+        if (!p._sprayProducts) boxNormalQty += p.qty;
+      }
+      normalIce = calcNormalIcePacks(boxNormalQty, distance);
+      reasons.push(`普通产品${normalIce}个(${boxNormalQty}盒${distance > 2000 ? ',>2000km+1' : ''})`);
+    }
+
+    const totalIce = sprayIce + normalIce;
+
+    // 冰袋不计选箱（按你实测纯产品盒数），箱型保持选箱结果
+    let useBox = fb.box;
+
+    // 分离本箱的喷雾和普通产品
+    const boxSprayProducts = [];
+    const boxNormalProducts = [];
+    const boxInsulationBags = [];
+    for (const p of fb.products) {
+      if (p._sprayProducts) {
+        boxInsulationBags.push(p._bag);
+        for (const sp of p._sprayProducts) boxSprayProducts.push(sp);
+      } else {
+        boxNormalProducts.push(p);
+      }
+    }
+
+    boxes.push({
+      box: useBox, type: "mixed",
+      sprayProducts: boxSprayProducts,
+      normalProducts: boxNormalProducts,
+      insulationBags: boxInsulationBags,
+      icePackCount: totalIce,
+      icePackReason: reasons.join(" + "),
+      waterproofBag: true,
+    });
+  }
+  return boxes;
+}
+
+// --- 4.9 计算箱的重量和包材 ---
+function calcBoxDetails(boxInfo) {
+  const box = boxInfo.box;
+  const inner = getInnerDims(box);
+
+  // 泡沫箱重量
+  const foamWeight = getFoamBoxWeight(box);
+
+  // 泡沫箱价格
+  const foamPrice = box.price;
+
+  // 防水袋
+  const wbPrice = SEED.waterproofBag.price;
+  const wbWeight = SEED.waterproofBag.weight;
+
+  // 保温袋
+  let bagPrice = 0, bagWeight = 0;
+  if (boxInfo.insulationBags && boxInfo.insulationBags.length > 0) {
+    for (const bag of boxInfo.insulationBags) {
+      bagPrice += bag.price;
+      bagWeight += 0.1; // 每袋 0.1kg
+    }
+  }
+
+  // 冰袋
+  let icePrice = 0, iceWeight = 0;
+  if (boxInfo.icePackCount > 0) {
+    icePrice = SEED.icePack.price * boxInfo.icePackCount;
+    iceWeight = SEED.icePack.weight * boxInfo.icePackCount;
+  }
+
+  // 产品重量（支持 spray / normal / mixed 三种类型）
+  let productWeight = 0;
+  const allBoxProducts = [...(boxInfo.sprayProducts || []), ...(boxInfo.normalProducts || [])];
+  for (const p of allBoxProducts) {
+    productWeight += p.weight * p.qty;
+  }
+
+  // 箱总实重 = 产品重 + 泡沫箱重 + 防水袋重 + 保温袋重 + 冰袋重
+  const boxActualWeight = productWeight + foamWeight + wbWeight + bagWeight + iceWeight;
+
+  // 箱抛重 = 外尺寸 L×W×H / 6000
+  const boxVolumetricWeight = (box.L * box.W * box.H) / SEED.volumetricDivisor;
+
+  // 包材费用 (折扣前)
+  const packagingCost = foamPrice + wbPrice + bagPrice + icePrice;
+
+  return {
+    foamWeight: r4(foamWeight),
+    foamPrice,
+    wbPrice, wbWeight,
+    bagPrice: r2(bagPrice), bagWeight: r4(bagWeight),
+    icePrice: r2(icePrice), iceWeight: r4(iceWeight),
+    productWeight: r4(productWeight),
+    boxActualWeight: r4(boxActualWeight),
+    boxVolumetricWeight: r4(boxVolumetricWeight),
+    packagingCost: r2(packagingCost),
+  };
+}
+
+// --- 4.10 计算冷链/空运运费 ---
+function calcSubFreight(mergedActualWeight, mergedVolumetricWeight, mode) {
+  const rawChargeable = Math.max(mergedActualWeight, mergedVolumetricWeight);
+  const chargeableWeight = roundChargeableWeight(rawChargeable);
+
+  let firstWeight = 0, continuedWeight = 0, discount = 1, tierLabel = "", groupLabel = "";
+
+  if (mode === "coldChain") {
+    // 冷链陆运
+    const dest = state.destination;
+    if (!dest || !dest.group) {
+      return { chargeableWeight, freight: 0, firstWeight: 0, continuedWeight: 0, discount: 0, tierLabel: "未选择", groupLabel: "未选择", error: "未选择目的地或该目的地未开通冷链" };
+    }
+    const group = dest.group;
+    const tier = getDailyTier(state.dailyVolume);
+    const rates = SEED.coldChainFreight[group][tier];
+    firstWeight = rates[0];
+    continuedWeight = rates[1];
+    discount = state.discounts.coldChain;
+    groupLabel = group;
+    tierLabel = tier;
+
+    // < 30 票/天: ×1.3 上浮
+    let multiplier = 1;
+    if (state.dailyVolume < 30) {
+      multiplier = 1.3;
+      tierLabel = tier + " ×1.3上浮";
+    }
+
+    const freight = (firstWeight + Math.max(0, chargeableWeight - 1) * continuedWeight) * discount * multiplier;
+    return { chargeableWeight, freight: r2(freight), firstWeight, continuedWeight, discount, tierLabel, groupLabel, multiplier };
+
+  } else if (mode === "air") {
+    // 空运
+    const dest = state.destination;
+    if (!dest) {
+      return { chargeableWeight, freight: 0, firstWeight: 0, continuedWeight: 0, discount: 0, tierLabel: "无分层", groupLabel: "未选择", error: "未选择目的地" };
+    }
+    firstWeight = dest.firstWeight;
+    continuedWeight = dest.continuedWeight;
+    discount = state.discounts.air;
+    tierLabel = "无日均分层";
+    groupLabel = dest.region;
+
+    const freight = (firstWeight + Math.max(0, chargeableWeight - 1) * continuedWeight) * discount;
+    return { chargeableWeight, freight: r2(freight), firstWeight, continuedWeight, discount, tierLabel, groupLabel };
+
+  } else if (mode === "normalRoad") {
+    // 常温陆运（顺丰特快）：续重分两段 (1-3kg / >3kg)
+    const dest = state.destination;
+    if (!dest || !dest.group) {
+      return { chargeableWeight, freight: 0, firstWeight: 0, continuedWeight: 0, discount: 0, tierLabel: "未选择", groupLabel: "未选择", error: "未选择目的地或该目的地未开通常温陆运" };
+    }
+    const group = dest.group;
+    const tier = getDailyTier(state.dailyVolume);
+    const rates = SEED.normalRoadFreight[group][tier];
+    firstWeight = rates[0];
+    const cont1to3 = rates[1];   // 1-3kg 续重
+    const contOver3 = rates[2];  // >3kg 续重
+    discount = state.discounts.normalRoad;
+    groupLabel = group;
+    tierLabel = tier;
+
+    let multiplier = 1;
+    if (state.dailyVolume < 30) {
+      multiplier = 1.3;
+      tierLabel = tier + " ×1.3上浮";
+    }
+
+    // 续重：1-3kg用cont1to3；>3kg部分，前2kg按cont1to3、之后按contOver3
+    let extra;
+    let continuedLabel;
+    if (chargeableWeight <= 1) {
+      extra = 0;
+      continuedLabel = `无续重`;
+    } else if (chargeableWeight <= 3) {
+      extra = (chargeableWeight - 1) * cont1to3;
+      continuedLabel = `${cont1to3}元/kg (1-3kg段, ${(chargeableWeight-1).toFixed(1)}kg续重)`;
+    } else {
+      extra = 2 * cont1to3 + (chargeableWeight - 3) * contOver3;
+      continuedLabel = `前2kg按${cont1to3}元/kg, 之后按${contOver3}元/kg (${(chargeableWeight-3).toFixed(1)}kg超重)`;
+    }
+    continuedWeight = chargeableWeight <= 3 ? cont1to3 : contOver3;
+    const freight = (firstWeight + extra) * discount * multiplier;
+    return { chargeableWeight, freight: r2(freight), firstWeight, continuedWeight, continuedLabel, cont1to3, contOver3, discount, tierLabel, groupLabel, multiplier };
+  }
+
+  return { chargeableWeight, freight: 0, firstWeight: 0, continuedWeight: 0, discount: 0, tierLabel: "", groupLabel: "", error: "未知模式" };
+}
+
+// --- 4.11 精温运费计算 ---
+function calcPrecisionFreight(products) {
+  if (!products || products.length === 0) {
+    return { freight: 0, boxType: "无", cityPrice: 0, discount: 0, error: "无产品" };
+  }
+
+  const city = state.precisionCity;
+  const cityTable = SEED.precisionFreight[city];
+  if (!cityTable) {
+    return { freight: 0, boxType: "无", cityPrice: 0, discount: 0, error: "城市无精温数据: " + city };
+  }
+
+  // 统计总件数和总体积
+  let totalUnits = 0, totalProductVol = 0;
+  for (const p of products) {
+    totalUnits += (p.qty || 0);
+    totalProductVol += p.L * p.W * p.H * (p.qty || 0);
+  }
+  if (totalUnits === 0) {
+    return { freight: 0, boxType: "无", cityPrice: 0, discount: 0, error: "无产品数量" };
+  }
+
+  // 选箱策略：
+  // - 精温箱只装关护喷雾（纯喷雾 / 复合模式）→ 按你提供的「每箱最大可装盒数(capacity)」匹配，
+  //   capacity 为装到满的极限盒数(36/80/180/340/540/782)，找最小 capacity >= 总盒数 的箱。
+  // - 组合订单：精温箱混装了非喷雾产品（如青禾/瞳光/梵肤白）→ 固定盒数容量不再适用，
+  //   按产品真实尺寸(groupFitsInBox 分层平铺)重新匹配箱型，装不下按体积估算多箱。
+  const onlySpray = products.every(p => p.isSpray);
+  let selectedBox = null, selectedBoxName = "", numBoxes = 1, matchMode = "";
+
+  if (onlySpray) {
+    matchMode = "box"; // 按盒数容量匹配
+    for (const pb of SEED.precisionBoxes) {
+      const price = cityTable[pb.name];
+      if (price === "×" || price === undefined) continue;
+      if (pb.capacity >= totalUnits) {
+        selectedBox = pb;
+        selectedBoxName = pb.name;
+        break;
+      }
+    }
+    if (!selectedBox) {
+      // 连最大箱都装不下 → 用最大可用箱按盒数拆多箱
+      for (let i = SEED.precisionBoxes.length - 1; i >= 0; i--) {
+        const pb = SEED.precisionBoxes[i];
+        const price = cityTable[pb.name];
+        if (price === "×" || price === undefined) continue;
+        selectedBox = pb;
+        selectedBoxName = pb.name;
+        break;
+      }
+      if (!selectedBox) {
+        return { freight: 0, boxType: "无", cityPrice: 0, discount: 0, error: "该城市无可用精温箱型" };
+      }
+      numBoxes = Math.max(1, Math.ceil(totalUnits / selectedBox.capacity));
+    }
+  } else {
+    matchMode = "size"; // 组合订单：按真实尺寸(极端点摆放)重新匹配
+    for (const pb of SEED.precisionBoxes) {
+      const price = cityTable[pb.name];
+      if (price === "×" || price === undefined) continue;
+      if (groupFitsInBoxExact(products, pb.L, pb.W, pb.H, 0)) {
+        selectedBox = pb;
+        selectedBoxName = pb.name;
+        break;
+      }
+    }
+    if (!selectedBox) {
+      // 单箱装不下 → 用最大可用箱，按体积估算多箱
+      for (let i = SEED.precisionBoxes.length - 1; i >= 0; i--) {
+        const pb = SEED.precisionBoxes[i];
+        const price = cityTable[pb.name];
+        if (price === "×" || price === undefined) continue;
+        selectedBox = pb;
+        selectedBoxName = pb.name;
+        break;
+      }
+      if (!selectedBox) {
+        return { freight: 0, boxType: "无", cityPrice: 0, discount: 0, error: "该城市无可用精温箱型" };
+      }
+      const maxBoxVol = selectedBox.L * selectedBox.W * selectedBox.H * 0.85;
+      numBoxes = Math.max(1, Math.ceil(totalProductVol / maxBoxVol));
+    }
+  }
+
+  const cityPrice = cityTable[selectedBoxName];
+  const discount = state.discounts.precision;
+  const freight = cityPrice * discount * numBoxes;
+
+  return { freight: r2(freight), boxType: (numBoxes > 1 ? selectedBoxName + "×" + numBoxes : selectedBoxName), cityPrice, discount, box: selectedBox, numBoxes, totalUnits, totalProductVol, matchMode };
+}
+
+// --- 4.12 主物流计算 ---
+function calcLogistics() {
+  const sel = getSelectedProducts();
+  const mode = state.logisticsMode;
+  const lines = [];
+  let totalCost = 0;
+  let totalWeight = { actual: 0, volumetric: 0, chargeable: 0 };
+
+  const isComposite = mode.includes("+");
+  const hasPrecision = mode === "precision" || mode.startsWith("precision+");
+  const hasColdChainOrAir = mode === "coldChain" || mode === "air" || mode.endsWith("+coldChain") || mode.endsWith("+air");
+  const hasNormalRoad = mode === "normalRoad" || mode.endsWith("+normalRoad");
+  const hasSubLogistics = hasColdChainOrAir || hasNormalRoad;  // 有副物流(空运/冷链/常温)
+  let subMode = null;
+  if (mode.endsWith("+air") || mode === "air") subMode = "air";
+  else if (mode.endsWith("+coldChain") || mode === "coldChain") subMode = "coldChain";
+  else if (mode.endsWith("+normalRoad") || mode === "normalRoad") subMode = "normalRoad";
+
+  // 距成都距离
+  const distance = getDestinationDistance();
+
+  // 仓运操作整单算一次 (精温/冷链/空运/常温均含操作费)
+  const allProducts = sel.all;
+  const includeOperation = hasSubLogistics || hasPrecision;
+  const handling = calcHandling(allProducts, includeOperation);
+
+  // ========== 精温部分 ==========
+  let precisionResult = null;
+  if (hasPrecision) {
+    // 非复合 → 所有产品走精温；复合 → 仅关护喷雾走精温
+    const precisionProducts = isComposite ? sel.spray : sel.all;
+    if (precisionProducts.length > 0) {
+      precisionResult = calcPrecisionFreight(precisionProducts);
+
+      if (isComposite) {
+        // 复合模式：精温部分只算运费（杂费在仓运操作里整单算过了）
+        totalCost += precisionResult.freight;
+        lines.push({ type: "header", text: "【精温部分】" });
+        lines.push({ type: "line", text: `精温箱型: ${precisionResult.boxType} (内尺寸${precisionResult.box.L}×${precisionResult.box.W}×${precisionResult.box.H}cm, ${precisionResult.totalUnits}件)` });
+        lines.push({ type: "line", text: `匹配方式: ${precisionResult.matchMode === "box" ? "按盒数容量(纯关护喷雾)" : "按真实尺寸(组合订单混装)"}` });
+        lines.push({ type: "line", text: `精温产品: ${fmtProducts(precisionProducts)}` });
+        lines.push({ type: "line", text: `精温到达城市: ${state.precisionCity}` });
+        lines.push({ type: "line", text: `精温运费 = ${precisionResult.cityPrice} × ${precisionResult.discount}${precisionResult.numBoxes > 1 ? ' × '+precisionResult.numBoxes+'箱' : ''} = ${fmt(precisionResult.freight)}` });
+        lines.push({ type: "result", text: `精温物流费 = ${fmt(precisionResult.freight)} (杂费已含在仓运操作中)` });
+      } else {
+        // 非复合精温：物流费 = 货运+入库+卸货+仓储+操作+运费 (6项, 无包材)
+        const precisionHandling = calcHandling(precisionProducts, true);
+        const precisionLogistics = precisionHandling.freight + precisionHandling.inbound + precisionHandling.unload + precisionHandling.storage + precisionHandling.operation + precisionResult.freight;
+        totalCost += precisionLogistics;
+        lines.push({ type: "header", text: "【精温部分（全部）】" });
+        lines.push({ type: "line", text: `精温箱型: ${precisionResult.boxType} (内尺寸${precisionResult.box.L}×${precisionResult.box.W}×${precisionResult.box.H}cm, ${precisionResult.totalUnits}件)` });
+        lines.push({ type: "line", text: `匹配方式: ${precisionResult.matchMode === "box" ? "按盒数容量(纯关护喷雾)" : "按真实尺寸(组合订单混装)"}` });
+        lines.push({ type: "line", text: `精温产品: ${fmtProducts(precisionProducts)}` });
+        lines.push({ type: "line", text: `精温到达城市: ${state.precisionCity}` });
+        lines.push({ type: "line", text: `精温运费 = ${precisionResult.cityPrice} × ${precisionResult.discount}${precisionResult.numBoxes > 1 ? ' × '+precisionResult.numBoxes+'箱' : ''} = ${fmt(precisionResult.freight)}` });
+        lines.push({ type: "line", text: `精温杂费: 货运${fmt(precisionHandling.freight)} + 入库${fmt(precisionHandling.inbound)} + 卸货${fmt(precisionHandling.unload)} + 仓储${fmt(precisionHandling.storage)} + 操作${fmt(precisionHandling.operation)} = ${fmt(precisionHandling.freight + precisionHandling.inbound + precisionHandling.unload + precisionHandling.storage + precisionHandling.operation)}` });
+        lines.push({ type: "result", text: `精温物流费 = ${fmt(precisionLogistics)} (含操作费, 无包材)` });
+      }
+
+      if (precisionResult.error) {
+        lines.push({ type: "line", text: `⚠ ${precisionResult.error}` });
+      }
+    }
+  }
+
+  // ========== 冷链/空运/常温陆运部分 ==========
+  if (hasSubLogistics) {
+    // 复合 → 仅普通产品走副物流；非复合 → 所有产品
+    const targetProducts = isComposite ? sel.normal : sel.all;
+
+    // 冷链/空运/常温陆运均需加冰袋，规则相同: 喷雾≤2000km→4(>2000km→5); 普通每箱 2+⌊(盒数-1)/5⌋, >2000km 再+1
+    const useIcePacks = hasColdChainOrAir || hasNormalRoad;
+
+    if (targetProducts.length > 0) {
+      // 打包：非复合时混合打包（关护喷雾用保温袋，普通产品直接装箱）
+      let actualBoxes;
+      if (isComposite) {
+        // 复合：只有普通产品，无保温袋
+        actualBoxes = packNormalProducts(targetProducts, useIcePacks, distance);
+      } else {
+        // 非复合：混合打包（关护喷雾 + 普通产品都走副物流）
+        actualBoxes = calcMixedPacking(targetProducts, useIcePacks, distance);
+      }
+
+      // 计算各箱详情
+      let mergedActualWeight = 0, mergedVolumetricWeight = 0, totalPackaging = 0;
+      const boxDetails = [];
+      for (const bi of actualBoxes) {
+        const details = calcBoxDetails(bi);
+        mergedActualWeight += details.boxActualWeight;
+        mergedVolumetricWeight += details.boxVolumetricWeight;
+        totalPackaging += details.packagingCost;
+        boxDetails.push({ boxInfo: bi, details });
+      }
+
+      // 运费计算
+      const freightMode = subMode || mode;
+      const freightResult = calcSubFreight(mergedActualWeight, mergedVolumetricWeight, freightMode);
+
+      // 包材折扣
+      const packagingDiscounted = totalPackaging * state.discounts.packaging;
+
+      // 仓运操作
+      let handlingCost = 0;
+      if (isComposite) {
+        // 复合：仓运操作整单算一次（已包含所有产品杂费+操作费）
+        // 精温部分的杂费已在精温运费中体现(只算运费)，所以冷链/空运部分用全部handling
+        handlingCost = handling.total;
+      } else {
+        handlingCost = handling.total;
+      }
+
+      const subLogistics = handlingCost + packagingDiscounted + freightResult.freight;
+      totalCost += subLogistics;
+
+      totalWeight.actual = mergedActualWeight;
+      totalWeight.volumetric = mergedVolumetricWeight;
+      totalWeight.chargeable = freightResult.chargeableWeight;
+
+      const modeLabel = freightMode === "air" ? "空运" : (freightMode === "coldChain" ? "冷链陆运" : "常温陆运");
+      lines.push({ type: "header", text: `【${modeLabel}部分】` });
+      lines.push({ type: "line", text: `距成都距离: ${distance}km${distance > 2000 ? ' (>2000km, 关护喷雾每箱5冰袋)' : ' (≤2000km, 关护喷雾每箱4冰袋)'}` });
+      lines.push({ type: "line", text: `冰袋规则: 关护喷雾每箱${calcSprayIcePacks(distance)}个 | 普通产品每箱 2+⌊(盒数-1)/5⌋${distance > 2000 ? ', 距成都>2000km再+1' : ''}` });
+      lines.push({ type: "line", text: `泡沫箱数: ${actualBoxes.length}` });
+
+      // 每箱详情
+      for (let i = 0; i < boxDetails.length; i++) {
+        const bd = boxDetails[i];
+        const bi = bd.boxInfo;
+        const d = bd.details;
+        lines.push({ type: "line", text: `  箱${i+1} [${bi.box.name}] 外尺寸${bi.box.L}×${bi.box.W}×${bi.box.H}cm 内尺寸(壁厚2cm)` });
+        if (bi.type === "mixed") {
+          lines.push({ type: "line", text: `    类型: 混合装箱(关护喷雾+普通产品)` });
+          if (bi.insulationBags && bi.insulationBags.length > 0) {
+            lines.push({ type: "line", text: `    保温袋: ${bi.insulationBags.map(b=>b.name).join(",")} (${bi.insulationBags.length}个)` });
+          }
+          const allProd = [...(bi.sprayProducts||[]), ...(bi.normalProducts||[])];
+          lines.push({ type: "line", text: `    产品: ${fmtProducts(allProd)}` });
+          lines.push({ type: "line", text: `    冰袋: ${bi.icePackCount}个 (${bi.icePackReason}) → ${r4(bi.icePackCount * SEED.icePack.weight)}kg, ¥${r2(bi.icePackCount * SEED.icePack.price)}` });
+        } else if (bi.type === "spray" && bi.insulationBags && bi.insulationBags.length > 0) {
+          lines.push({ type: "line", text: `    类型: 关护喷雾(含保温袋+冰袋)` });
+          lines.push({ type: "line", text: `    产品: ${fmtProducts(bi.sprayProducts)}` });
+          lines.push({ type: "line", text: `    保温袋: ${bi.insulationBags.map(b=>b.name).join(",")} (${bi.insulationBags.length}个)` });
+          lines.push({ type: "line", text: `    冰袋: ${bi.icePackCount}个 (${bi.icePackReason}) → ${r4(bi.icePackCount * SEED.icePack.weight)}kg, ¥${r2(bi.icePackCount * SEED.icePack.price)}` });
+        } else {
+          lines.push({ type: "line", text: `    类型: 普通产品${bi.icePackCount > 0 ? '(含冰袋)' : ''}` });
+          lines.push({ type: "line", text: `    产品: ${fmtProducts(bi.normalProducts)}` });
+          if (bi.icePackCount > 0) {
+            lines.push({ type: "line", text: `    冰袋: ${bi.icePackCount}个 (${bi.icePackReason}) → ${r4(bi.icePackCount * SEED.icePack.weight)}kg, ¥${r2(bi.icePackCount * SEED.icePack.price)}` });
+          }
+        }
+        lines.push({ type: "line", text: `    产品重: ${d.productWeight}kg, 泡沫箱重: ${d.foamWeight}kg, 防水袋重: ${d.wbWeight}kg, 保温袋重: ${d.bagWeight}kg, 冰袋重: ${d.iceWeight}kg` });
+        lines.push({ type: "line", text: `    箱实重: ${d.boxActualWeight}kg, 箱抛重: ${d.boxVolumetricWeight}kg` });
+        lines.push({ type: "line", text: `    包材(折扣前): 泡沫箱¥${d.foamPrice} + 防水袋¥${d.wbPrice} + 保温袋¥${d.bagPrice} + 冰袋¥${d.icePrice} = ¥${d.packagingCost}` });
+      }
+
+      lines.push({ type: "line", text: `合并实重: ${r4(mergedActualWeight)}kg` });
+      lines.push({ type: "line", text: `合并抛重: ${r4(mergedVolumetricWeight)}kg` });
+      lines.push({ type: "line", text: `原始计费重量: max(${r4(mergedActualWeight)}, ${r4(mergedVolumetricWeight)}) = ${r4(Math.max(mergedActualWeight, mergedVolumetricWeight))}kg` });
+      lines.push({ type: "line", text: `最终计费重量(取整): ${freightResult.chargeableWeight}kg` });
+
+      if (freightResult.groupLabel && freightResult.groupLabel !== "未选择") {
+        const gcn = SEED.groupCN[freightResult.groupLabel] || freightResult.groupLabel;
+        const cities = groupCityList(freightResult.groupLabel);
+        const cityStr = cities.length ? `（${cities.join("、")}）` : "";
+        lines.push({ type: "line", text: `目的地组: ${gcn}${cityStr}` });
+      }
+      if (freightResult.tierLabel) lines.push({ type: "line", text: `日均档位: ${freightResult.tierLabel} (日均${state.dailyVolume}票)` });
+      lines.push({ type: "line", text: `首重费: ${freightResult.firstWeight}元` });
+      const multStr = freightResult.multiplier ? ` × ${freightResult.multiplier}` : '';
+      if (freightMode === "normalRoad") {
+        let extra;
+        if (freightResult.chargeableWeight <= 1) extra = 0;
+        else if (freightResult.chargeableWeight <= 3) extra = (freightResult.chargeableWeight - 1) * freightResult.cont1to3;
+        else extra = 2 * freightResult.cont1to3 + (freightResult.chargeableWeight - 3) * freightResult.contOver3;
+        lines.push({ type: "line", text: `续重: ${freightResult.continuedLabel}` });
+        lines.push({ type: "line", text: `运费 = (${freightResult.firstWeight} + ${r2(extra)}) × ${freightResult.discount}${multStr} = ${fmt(freightResult.freight)}` });
+      } else {
+        lines.push({ type: "line", text: `续重单价: ${freightResult.continuedWeight}元/kg` });
+        lines.push({ type: "line", text: `运费 = (${freightResult.firstWeight} + max(0, ${r4(freightResult.chargeableWeight)} - 1) × ${freightResult.continuedWeight}) × ${freightResult.discount}${multStr} = ${fmt(freightResult.freight)}` });
+      }
+
+      lines.push({ type: "line", text: `包材合计(折扣前): ¥${r2(totalPackaging)} × ${state.discounts.packaging} = ${fmt(packagingDiscounted)}` });
+      lines.push({ type: "line", text: `仓运操作: 货运${fmt(handling.freight)} + 入库${fmt(handling.inbound)} + 卸货${fmt(handling.unload)} + 仓储${fmt(handling.storage)}${includeOperation ? ' + 操作'+fmt(handling.operation) : ''} = ${fmt(handlingCost)}` });
+      lines.push({ type: "result", text: `${modeLabel}物流费 = ${fmt(subLogistics)}` });
+
+      if (freightResult.error) {
+        lines.push({ type: "line", text: `⚠ ${freightResult.error}` });
+      }
+    }
+  }
+
+  // ========== 总物流费 ==========
+  lines.push({ type: "header", text: "【总物流费】" });
+  lines.push({ type: "result", text: `总物流费 = ${fmt(totalCost)}` });
+
+  return { totalCost: r2(totalCost), lines, totalWeight, handling, precisionResult };
+}
+
+// --- 4.13 主计算函数 ---
+function calculateAll() {
+  const productCost = calcProductCost();
+  const deductions = calcDeductions();
+  const companyTax = calcCompanyTax(productCost, state.price);
+  const logistics = calcLogistics();
+  const netProfit = state.price - state.pv - productCost - deductions.total - companyTax - logistics.totalCost;
+
+  return { productCost, deductions, companyTax, logistics, netProfit };
+}
+
+// ============================================================
+// 5. UI 渲染
+// ============================================================
+function renderDashboard(result) {
+  document.getElementById("d_netProfit").textContent = fmt(result.netProfit);
+  document.getElementById("d_netProfit").className = "value " + (result.netProfit >= 0 ? "green" : "red");
+  document.getElementById("d_price").textContent = fmt(state.price);
+  document.getElementById("d_pv").textContent = fmt(state.pv);
+  document.getElementById("d_cost").textContent = fmt(result.productCost);
+  document.getElementById("d_logistics").textContent = fmt(result.logistics.totalCost);
+  document.getElementById("d_deductions").textContent = fmt(result.deductions.total);
+  document.getElementById("d_tax").textContent = fmt(result.companyTax);
+}
+
+function renderBreakdown(result) {
+  const lines = result.logistics.lines;
+  let html = "";
+
+  // 利润公式行
+  html += `<div class="header">利润计算</div>`;
+  html += `<div class="line">净利润 = 售价 − PV − 产品成本 − 扣点合计 − 公司税 − 物流费</div>`;
+  html += `<div class="line">净利润 = ${fmt(state.price)} − ${fmt(state.pv)} − ${fmt(result.productCost)} − ${fmt(result.deductions.total)} − ${fmt(result.companyTax)} − ${fmt(result.logistics.totalCost)}</div>`;
+  html += `<div class="line green">净利润 = ${fmt(result.netProfit)}</div>`;
+  html += `<br>`;
+
+  // 扣点
+  html += `<div class="header">扣点明细</div>`;
+  const r = state.deductionRates;
+  const brandRate = state.totalPV > r.pvThreshold ? r.brandHigh : r.brandLow;
+  const brandLabel = state.totalPV > r.pvThreshold ? `总PV>${r.pvThreshold.toLocaleString()} → 高档${r.brandHigh*100}%` : `总PV≤${r.pvThreshold.toLocaleString()} → 低档${r.brandLow*100}%`;
+  html += `<div class="line">品牌费 = PV × ${brandLabel} = ${fmt(state.pv)} × ${(brandRate*100).toFixed(1)}% = ${fmt(result.deductions.brandFee)}</div>`;
+  html += `<div class="line">外事费 = PV × ${r.foreignAffairs*100}% = ${fmt(state.pv)} × ${r.foreignAffairs*100}% = ${fmt(result.deductions.foreignFee)}</div>`;
+  html += `<div class="line">税费 = 售价 × ${r.taxRate*100}% = ${fmt(state.price)} × ${r.taxRate*100}% = ${fmt(result.deductions.taxFee)}</div>`;
+  html += `<div class="line result">扣点合计 = ${fmt(result.deductions.total)}</div>`;
+  html += `<br>`;
+
+  // 公司税
+  html += `<div class="header">公司税</div>`;
+  const taxBase = result.productCost / 1.13;
+  const vat = taxBase * 0.05 * 0.13 * 1.12;
+  const income = taxBase * 0.05 * 0.05;
+  html += `<div class="line">基数 = 产品成本 / 1.13 = ${fmt(result.productCost)} / 1.13 = ${fmt(taxBase)}</div>`;
+  html += `<div class="line">增值税及附加 = ${fmt(taxBase)} × 5% × 13% × (1+12%) = ${fmt(vat)}</div>`;
+  html += `<div class="line">所得税 = ${fmt(taxBase)} × 5% × 5% = ${fmt(income)}</div>`;
+  const stampTax = state.price * 0.0003 + result.productCost * 0.0003;
+  html += `<div class="line">印花税 = 售价 × 0.03% + 产品成本 × 0.03% = ${fmt(state.price)} × 0.0003 + ${fmt(result.productCost)} × 0.0003 = ${fmt(stampTax)}</div>`;
+  html += `<div class="line result">公司税合计 = ${fmt(result.companyTax)}</div>`;
+  html += `<br>`;
+
+  // 物流明细
+  for (const line of lines) {
+    if (line.type === "header") {
+      html += `<div class="header">${line.text}</div>`;
+    } else if (line.type === "result") {
+      html += `<div class="line result">${line.text}</div>`;
+    } else {
+      html += `<div class="line">${line.text}</div>`;
+    }
+  }
+
+  // 重量汇总
+  const tw = result.logistics.totalWeight;
+  if (tw.chargeable > 0) {
+    html += `<br>`;
+    html += `<div class="header">重量汇总</div>`;
+    html += `<div class="line">合并实重: ${r4(tw.actual)}kg · 合并抛重: ${r4(tw.volumetric)}kg · 计费重量(取整): ${tw.chargeable}kg</div>`;
+  }
+
+  document.getElementById("breakdown").innerHTML = html;
+}
+
+function renderProducts() {
+  const tbody = document.getElementById("productTableBody");
+  let html = "";
+  for (const p of SEED.products) {
+    const qty = state.productSelections[p.id] || 0;
+    html += `<tr>
+      <td><input type="checkbox" class="product-check" ${qty > 0 ? "checked" : ""} onchange="onProductCheck(${p.id}, this.checked)"></td>
+      <td>${p.name}</td>
+      <td>${p.L}×${p.W}×${p.H}</td>
+      <td>${p.weight}</td>
+      <td><input type="number" step="0.01" id="cost_${p.id}" value="${p.cost}" onchange="onCostChange(${p.id}, this.value)" style="width:60px;"></td>
+      <td>${p.freight}</td>
+      <td>${p.inbound}</td>
+      <td>${p.unload}</td>
+      <td>${p.storage}</td>
+      <td>${p.isSpray ? "是" : "否"}</td>
+      <td><input type="number" min="0" value="${qty}" onchange="onQtyChange(${p.id}, this.value)" style="width:50px;"></td>
+    </tr>`;
+  }
+  tbody.innerHTML = html;
+}
+
+function renderDestinations() {
+  const sel = document.getElementById("i_destination");
+  let html = '<option value="">请选择目的地</option>';
+  SEED.airFreight.forEach((entry, idx) => {
+    const groupInfo = entry.group ? (() => {
+      const cities = groupCityList(entry.group);
+      const cityStr = cities.length <= 3 ? `（${cities.join("、")}）` : `（${cities.slice(0,3).join("、")}等${cities.length}地）`;
+      return ` [冷链组${SEED.groupCN[entry.group]}${cityStr}]`;
+    })() : " [冷链未开通]";
+    const distInfo = entry.distance > 2000 ? ` ${entry.distance}km⚠` : ` ${entry.distance}km`;
+    html += `<option value="${idx}">${entry.region} (首重${entry.firstWeight}/续重${entry.continuedWeight})${distInfo}${groupInfo}</option>`;
+  });
+  sel.innerHTML = html;
+}
+
+function renderPrecisionCities() {
+  const sel = document.getElementById("i_precisionCity");
+  let html = "";
+  const cities = Object.keys(SEED.precisionFreight);
+  for (const city of cities) {
+    html += `<option value="${city}">${city}</option>`;
+  }
+  sel.innerHTML = html;
+  sel.value = state.precisionCity;
+}
+
+function renderSettings() {
+  // 扣点费率
+  const dSettings = document.getElementById("deductionSettings");
+  dSettings.innerHTML = `
+    <div class="setting-item"><label>品牌费(低档)</label><input type="number" step="0.001" value="${state.deductionRates.brandLow}" onchange="state.deductionRates.brandLow=parseFloat(this.value);recalc()"></div>
+    <div class="setting-item"><label>品牌费(高档)</label><input type="number" step="0.001" value="${state.deductionRates.brandHigh}" onchange="state.deductionRates.brandHigh=parseFloat(this.value);recalc()"></div>
+    <div class="setting-item"><label>总PV门槛</label><input type="number" step="1" value="${state.deductionRates.pvThreshold}" onchange="state.deductionRates.pvThreshold=parseFloat(this.value);recalc()"></div>
+    <div class="setting-item"><label>外事费率</label><input type="number" step="0.001" value="${state.deductionRates.foreignAffairs}" onchange="state.deductionRates.foreignAffairs=parseFloat(this.value);recalc()"></div>
+    <div class="setting-item"><label>税率</label><input type="number" step="0.001" value="${state.deductionRates.taxRate}" onchange="state.deductionRates.taxRate=parseFloat(this.value);recalc()"></div>
+  `;
+
+  // 折扣
+  const discSettings = document.getElementById("discountSettings");
+  discSettings.innerHTML = `
+    <div class="setting-item"><label>包材折扣</label><input type="number" step="0.01" value="${state.discounts.packaging}" onchange="state.discounts.packaging=parseFloat(this.value);recalc()"></div>
+    <div class="setting-item"><label>冷链运费折扣</label><input type="number" step="0.01" value="${state.discounts.coldChain}" onchange="state.discounts.coldChain=parseFloat(this.value);recalc()"></div>
+    <div class="setting-item"><label>空运运费折扣</label><input type="number" step="0.01" value="${state.discounts.air}" onchange="state.discounts.air=parseFloat(this.value);recalc()"></div>
+    <div class="setting-item"><label>精温运费折扣</label><input type="number" step="0.01" value="${state.discounts.precision}" onchange="state.discounts.precision=parseFloat(this.value);recalc()"></div>
+    <div class="setting-item"><label>常温陆运折扣</label><input type="number" step="0.01" value="${state.discounts.normalRoad}" onchange="state.discounts.normalRoad=parseFloat(this.value);recalc()"></div>
+  `;
+}
+
+// ============================================================
+// 6. 事件处理
+// ============================================================
+function onProductCheck(id, checked) {
+  if (checked && !state.productSelections[id]) {
+    state.productSelections[id] = 1;
+  } else if (!checked) {
+    state.productSelections[id] = 0;
+  }
+  renderProducts();
+  recalc();
+}
+
+function onQtyChange(id, val) {
+  const qty = parseInt(val) || 0;
+  state.productSelections[id] = qty;
+  recalc();
+}
+
+function onCostChange(id, val) {
+  const cost = parseFloat(val) || 0;
+  const product = SEED.products.find(p => p.id === id);
+  if (product) product.cost = cost;
+  recalc();
+}
+
+function setMode(mode) {
+  state.logisticsMode = mode;
+  document.querySelectorAll(".mode-btn").forEach(btn => btn.classList.remove("active"));
+  document.querySelector(`[data-mode="${mode}"]`).classList.add("active");
+
+  // 显示/隐藏城市选择
+  const showCity = mode === "precision" || mode.startsWith("precision+");
+  document.getElementById("cityField").style.display = showCity ? "flex" : "none";
+
+  recalc();
+}
+
+function onDestinationChange() {
+  const sel = document.getElementById("i_destination");
+  const idx = parseInt(sel.value);
+  if (!isNaN(idx)) {
+    state.destination = SEED.airFreight[idx];
+  } else {
+    state.destination = null;
+  }
+  recalc();
+}
+
+function toggleSettings() {
+  const area = document.getElementById("settingsArea");
+  area.style.display = area.style.display === "none" ? "block" : "none";
+}
+
+// ============================================================
+// 7. 重算与持久化
+// ============================================================
+function recalc() {
+  // 更新输入值
+  state.price = parseFloat(document.getElementById("i_price").value) || 0;
+  state.pv = parseFloat(document.getElementById("i_pv").value) || 0;
+  state.totalPV = parseFloat(document.getElementById("i_totalPV").value) || 0;
+  state.dailyVolume = parseInt(document.getElementById("i_dailyVolume").value) || 0;
+  state.precisionCity = document.getElementById("i_precisionCity").value;
+
+  const result = calculateAll();
+  renderDashboard(result);
+  renderBreakdown(result);
+  saveState();
+}
+
+function saveState() {
+  try {
+    localStorage.setItem("profitCalc_v8", JSON.stringify(state));
+  } catch(e) {}
+}
+
+function deepMerge(target, source) {
+  for (const key in source) {
+    if (source[key] && typeof source[key] === "object" && !Array.isArray(source[key])) {
+      if (typeof target[key] !== "object" || target[key] === null) target[key] = {};
+      deepMerge(target[key], source[key]);
+    } else {
+      target[key] = source[key];
+    }
+  }
+  return target;
+}
+
+function loadState() {
+  try {
+    const saved = localStorage.getItem("profitCalc_v8");
+    if (saved) {
+      const loaded = JSON.parse(saved);
+      // 深合并：保留旧缓存里用户改过的字段，同时补全 SEED 新增字段(如 discounts.normalRoad)
+      deepMerge(state, loaded);
+    }
+  } catch(e) {}
+}
+
+function applyStateToUI() {
+  document.getElementById("i_price").value = state.price;
+  document.getElementById("i_pv").value = state.pv;
+  document.getElementById("i_totalPV").value = state.totalPV;
+  document.getElementById("i_dailyVolume").value = state.dailyVolume;
+
+  // 设置模式按钮
+  document.querySelectorAll(".mode-btn").forEach(btn => btn.classList.remove("active"));
+  const activeBtn = document.querySelector(`[data-mode="${state.logisticsMode}"]`);
+  if (activeBtn) activeBtn.classList.add("active");
+
+  // 显示/隐藏城市
+  const showCity = state.logisticsMode === "precision" || state.logisticsMode.startsWith("precision+");
+  document.getElementById("cityField").style.display = showCity ? "flex" : "none";
+}
+
+// ============================================================
+// 8. 初始化
+// ============================================================
+function init() {
+  // 设置默认选中
+  state.productSelections = { 0:3, 2:4, 3:2 }; // 用例1默认
+
+  loadState();
+  applyStateToUI();
+  renderProducts();
+  renderDestinations();
+  renderPrecisionCities();
+  renderSettings();
+
+  // 默认选北京市
+  const beijingIdx = SEED.airFreight.findIndex(e => e.region === "北京市");
+  if (beijingIdx >= 0) {
+    document.getElementById("i_destination").value = beijingIdx;
+    state.destination = SEED.airFreight[beijingIdx];
+  }
+
+  recalc();
+}
+
+window.addEventListener("DOMContentLoaded", init);
+
+// 输入框实时响应
+document.addEventListener("input", function(e) {
+  if (e.target.tagName === "INPUT" || e.target.tagName === "SELECT") {
+    recalc();
+  }
+});
+
+// 售价变化不再自动改产品成本；各产品成本由对应输入框(onCostChange)手动修改
+
+</script>
+</body>
+</html>
