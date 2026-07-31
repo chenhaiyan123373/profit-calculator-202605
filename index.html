@@ -673,10 +673,10 @@ function selectFoamBoxes(products) {
     return "fallback";                        // 其他兜底(体积折算)
   };
 
-  // 单件(或聚合产品)对某个箱的"占箱比例"
+    // 单件(或聚合产品)对某个箱的"占箱比例"
   const itemFrac = (p, box) => {
     const k = capKey(p);
-    if (k === "spray") return (p.qty || 1) / box.cap.spray;   // 喷雾按盒数匹配
+    if (k === "spray") return (p._sprayQty || p.qty || 1) / box.cap.spray;   // 喷雾(保温袋整体)按盒数匹配
     if (k === "qinghe") return (p.qty || 1) / box.cap.qinghe;
     if (k === "tonghua") return (p.qty || 1) / box.cap.tonghua;
     // 兜底：按体积折算到青禾容量（沿用旧模型）
@@ -694,7 +694,14 @@ function selectFoamBoxes(products) {
 
   // 展开为单件列表（每件 qty:1）
   const units = [];
-  for (const p of products) for (let k = 0; k < p.qty; k++) units.push({ ...p, qty: 1 });
+  for (const p of products) {
+    if (p.capType === "spray") {
+      // 关护喷雾已套保温袋，袋是软的不可分割整体 → 作为 1 个单元进箱（用 _sprayQty 记录盒数算占箱比例）
+      units.push({ ...p, qty: 1, _sprayQty: p.qty });
+    } else {
+      for (let k = 0; k < p.qty; k++) units.push({ ...p, qty: 1 });
+    }
+  }
 
   // 单箱能否装下全部（选最小能装下的箱）
   for (const box of SEED.foamBoxes) {
