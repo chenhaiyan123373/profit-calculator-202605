@@ -167,14 +167,15 @@ const SEED = {
   // cap = 各产品「每箱最多可装盒数」(用户实测)：
   //   qinghe(青禾头皮赋活): S2=3, S3=6, S4=7, S5=12, S6=16；S1=2 为估算待确认
   //   tonghua(瞳光四面体/梵肤白美白, 尺寸同20×14×4.7): S2=3, S3=4, S4=5, S5=8, S6=14；S1=1 为估算待确认
-  // 混合装箱按"各产品占箱比例之和≤1"匹配；关护喷雾(保温袋)走体积折算兜底。
+  //   spray(关护喷雾,已套保温袋+冰袋): 按盒数匹配；以下为"内体积−冰袋体积×0.7摆放系数"体积估算，待实测校准
+  // 混合装箱按"各产品占箱比例之和≤1"匹配；关护喷雾走 cap.spray 按盒数匹配（不再用体积折算）。
   foamBoxes: [
-    { name:"S1", L:29, W:17,  H:19,  density:16, price:2.00, cap:{ qinghe:2,  tonghua:1 } },
-    { name:"S2", L:29, W:19,  H:24,  density:16, price:2.50, cap:{ qinghe:3,  tonghua:3 } },
-    { name:"S3", L:34, W:24,  H:21.5,density:18, price:3.50, cap:{ qinghe:6,  tonghua:4 } },
-    { name:"S4", L:34, W:24,  H:24,  density:18, price:4.00, cap:{ qinghe:7,  tonghua:5 } },
-    { name:"S5", L:42, W:30,  H:22,  density:20, price:5.50, cap:{ qinghe:12, tonghua:8 } },
-    { name:"S6", L:45, W:30,  H:29,  density:20, price:7.00, cap:{ qinghe:16, tonghua:14 } },
+    { name:"S1", L:29, W:17,  H:19,  density:16, price:2.00, cap:{ qinghe:2,  tonghua:1,  spray:2  } },
+    { name:"S2", L:29, W:19,  H:24,  density:16, price:2.50, cap:{ qinghe:3,  tonghua:3,  spray:14 } },
+    { name:"S3", L:34, W:24,  H:21.5,density:18, price:3.50, cap:{ qinghe:6,  tonghua:4,  spray:27 } },
+    { name:"S4", L:34, W:24,  H:24,  density:18, price:4.00, cap:{ qinghe:7,  tonghua:5,  spray:34 } },
+    { name:"S5", L:42, W:30,  H:22,  density:20, price:5.50, cap:{ qinghe:12, tonghua:8,  spray:60 } },
+    { name:"S6", L:45, W:30,  H:29,  density:20, price:7.00, cap:{ qinghe:16, tonghua:14, spray:99 } },
   ],
 
   // 保温袋 (仅关护喷雾)
@@ -666,17 +667,19 @@ function selectFoamBoxes(products) {
 
   // 产品 → 容量类别
   const capKey = (p) => {
+    if (p.capType === "spray") return "spray";      // 关护喷雾(已套保温袋+冰袋)：按盒数匹配
     if (p.id === 1) return "qinghe";          // 青禾头皮赋活精华
     if (p.id === 0 || p.id === 3) return "tonghua"; // 瞳光四面体 / 梵肤白美白
-    return "fallback";                        // 关护喷雾保温袋等
+    return "fallback";                        // 其他兜底(体积折算)
   };
 
   // 单件(或聚合产品)对某个箱的"占箱比例"
   const itemFrac = (p, box) => {
     const k = capKey(p);
+    if (k === "spray") return (p.qty || 1) / box.cap.spray;   // 喷雾按盒数匹配
     if (k === "qinghe") return (p.qty || 1) / box.cap.qinghe;
     if (k === "tonghua") return (p.qty || 1) / box.cap.tonghua;
-    // 兜底：喷雾保温袋按体积折算到青禾容量（沿用旧模型）
+    // 兜底：按体积折算到青禾容量（沿用旧模型）
     return (p.L * p.W * p.H) / QINGHE_VOL / box.cap.qinghe;
   };
 
@@ -777,14 +780,19 @@ function packSprayProducts(sprayProducts, distance) {
   // Step1: 选保温袋
   const bags = selectInsulationBags(sprayProducts);
 
-  // Step2: 把保温袋当作"产品"装入泡沫箱
-  const bagProducts = bags.map(b => ({
-    L: b.bag.L, W: b.bag.W, H: b.bag.H,
-    weight: 0.1,
-    qty: 1,
-    _bag: b.bag,
-    _sprayProducts: b.products,
-  }));
+  // Step2: 把保温袋当作"产品"装入泡沫箱；按喷雾盒数匹配(capType=spray, qty=本袋喷雾盒数)
+  const bagProducts = bags.map((b, idx) => {
+    const sprayCount = b.products.length;
+    return {
+      L: b.bag.L, W: b.bag.W, H: b.bag.H,
+      weight: 0.1,
+      qty: sprayCount,
+      capType: "spray",
+      name: "喷雾袋" + idx,
+      _bag: b.bag,
+      _sprayProducts: b.products,
+    };
+  });
 
   // 关护喷雾冰袋数: 4个(距成都>2000km则5个)
   const icePackCount = calcSprayIcePacks(distance);
@@ -864,11 +872,15 @@ function calcMixedPacking(allProducts, useIcePacks, distance) {
   // 两种类型都有 → 合装
   // Step1: 关护喷雾先装保温袋
   const bags = selectInsulationBags(spray);
-  const bagItems = bags.map(b => ({
-    L: b.bag.L, W: b.bag.W, H: b.bag.H,
-    weight: 0.1, qty: 1,
-    _bag: b.bag, _sprayProducts: b.products,
-  }));
+  const bagItems = bags.map((b, idx) => {
+    const sprayCount = b.products.length;
+    return {
+      L: b.bag.L, W: b.bag.W, H: b.bag.H,
+      weight: 0.1, qty: sprayCount,
+      capType: "spray", name: "喷雾袋" + idx,
+      _bag: b.bag, _sprayProducts: b.products,
+    };
+  });
 
   // Step2: 保温袋 + 普通产品 合并为待装列表
   const combinedItems = [...bagItems, ...normal];
