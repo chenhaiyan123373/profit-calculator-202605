@@ -1086,6 +1086,28 @@ function calcSubFreight(mergedActualWeight, mergedVolumetricWeight, mode) {
   return { chargeableWeight, freight: 0, firstWeight: 0, continuedWeight: 0, discount: 0, tierLabel: "", groupLabel: "", error: "未知模式" };
 }
 
+// 精温智能拆箱：装满最大箱，余数用能装下它的最小箱补（避免单纯重复最大箱）
+function packPrecisionBoxesByCapacity(total, cityTable) {
+  const avail = SEED.precisionBoxes.filter(pb => {
+    const pr = cityTable[pb.name];
+    return pr !== "×" && pr !== undefined;
+  });
+  if (avail.length === 0) return [];
+  const sortedDesc = [...avail].sort((a, b) => b.capacity - a.capacity);
+  const largestCap = sortedDesc[0].capacity;
+  const counts = {};
+  let remaining = total;
+  while (remaining >= largestCap) {
+    counts[sortedDesc[0].name] = (counts[sortedDesc[0].name] || 0) + 1;
+    remaining -= largestCap;
+  }
+  if (remaining > 0) {
+    const topup = [...avail].sort((a, b) => a.capacity - b.capacity).find(pb => pb.capacity >= remaining);
+    if (topup) { counts[topup.name] = (counts[topup.name] || 0) + 1; remaining = 0; }
+  }
+  return sortedDesc.filter(pb => counts[pb.name]).map(pb => ({ pb, count: counts[pb.name] }));
+}
+
 // --- 4.11 精温运费计算 ---
 function calcPrecisionFreight(products) {
   if (!products || products.length === 0) {
@@ -1114,68 +1136,64 @@ function calcPrecisionFreight(products) {
   // - 组合订单：精温箱混装了非喷雾产品（如青禾/瞳光/梵肤白）→ 固定盒数容量不再适用，
   //   按产品真实尺寸(groupFitsInBox 分层平铺)重新匹配箱型，装不下按体积估算多箱。
   const onlySpray = products.every(p => p.isSpray);
-  let selectedBox = null, selectedBoxName = "", numBoxes = 1, matchMode = "";
+  let matchMode = "";
+
+  let boxList = [];  // [{ pb, count }]
 
   if (onlySpray) {
     matchMode = "box"; // 按盒数容量匹配
+    let single = null;
     for (const pb of SEED.precisionBoxes) {
       const price = cityTable[pb.name];
       if (price === "×" || price === undefined) continue;
-      if (pb.capacity >= totalUnits) {
-        selectedBox = pb;
-        selectedBoxName = pb.name;
-        break;
-      }
+      if (pb.capacity >= totalUnits) { single = pb; break; }
     }
-    if (!selectedBox) {
-      // 连最大箱都装不下 → 用最大可用箱按盒数拆多箱
-      for (let i = SEED.precisionBoxes.length - 1; i >= 0; i--) {
-        const pb = SEED.precisionBoxes[i];
-        const price = cityTable[pb.name];
-        if (price === "×" || price === undefined) continue;
-        selectedBox = pb;
-        selectedBoxName = pb.name;
-        break;
-      }
-      if (!selectedBox) {
+    if (single) {
+      boxList = [{ pb: single, count: 1 }];
+    } else {
+      // 超最大箱：智能拆箱（装满最大箱，余数用能装下它的最小箱补）
+      boxList = packPrecisionBoxesByCapacity(totalUnits, cityTable);
+      if (!boxList || boxList.length === 0) {
         return { freight: 0, boxType: "无", cityPrice: 0, discount: 0, error: "该城市无可用精温箱型" };
       }
-      numBoxes = Math.max(1, Math.ceil(totalUnits / selectedBox.capacity));
     }
   } else {
     matchMode = "size"; // 组合订单：按真实尺寸(极端点摆放)重新匹配
+    let single = null;
     for (const pb of SEED.precisionBoxes) {
       const price = cityTable[pb.name];
       if (price === "×" || price === undefined) continue;
-      if (groupFitsInBoxExact(products, pb.L, pb.W, pb.H, 0)) {
-        selectedBox = pb;
-        selectedBoxName = pb.name;
-        break;
-      }
+      if (groupFitsInBoxExact(products, pb.L, pb.W, pb.H, 0)) { single = pb; break; }
     }
-    if (!selectedBox) {
-      // 单箱装不下 → 用最大可用箱，按体积估算多箱
+    if (single) {
+      boxList = [{ pb: single, count: 1 }];
+    } else {
+      // 单箱装不下 → 用最大可用箱，按体积估算多箱(重复最大箱)
+      let largest = null;
       for (let i = SEED.precisionBoxes.length - 1; i >= 0; i--) {
         const pb = SEED.precisionBoxes[i];
         const price = cityTable[pb.name];
         if (price === "×" || price === undefined) continue;
-        selectedBox = pb;
-        selectedBoxName = pb.name;
-        break;
+        largest = pb; break;
       }
-      if (!selectedBox) {
-        return { freight: 0, boxType: "无", cityPrice: 0, discount: 0, error: "该城市无可用精温箱型" };
-      }
-      const maxBoxVol = selectedBox.L * selectedBox.W * selectedBox.H * 0.85;
-      numBoxes = Math.max(1, Math.ceil(totalProductVol / maxBoxVol));
+      if (!largest) return { freight: 0, boxType: "无", cityPrice: 0, discount: 0, error: "该城市无可用精温箱型" };
+      const maxBoxVol = largest.L * largest.W * largest.H * 0.85;
+      const n = Math.max(1, Math.ceil(totalProductVol / maxBoxVol));
+      boxList = [{ pb: largest, count: n }];
     }
   }
 
-  const cityPrice = cityTable[selectedBoxName];
   const discount = state.discounts.precision;
-  const freight = cityPrice * discount * numBoxes;
+  let rawFreight = 0;
+  for (const b of boxList) rawFreight += (cityTable[b.pb.name] || 0) * b.count;
+  const freight = rawFreight * discount;
+  const boxType = boxList.map(b => b.pb.name + (b.count > 1 ? "×" + b.count : "")).join(" + ");
+  const numBoxes = boxList.reduce((s, b) => s + b.count, 0);
+  const selectedBox = boxList[0].pb;
+  const cityPrice = cityTable[selectedBox.name] || 0;
+  const freightExpr = boxList.map(b => `${cityTable[b.pb.name]}×${b.count}`).join(" + ");
 
-  return { freight: r2(freight), boxType: (numBoxes > 1 ? selectedBoxName + "×" + numBoxes : selectedBoxName), cityPrice, discount, box: selectedBox, numBoxes, totalUnits, totalProductVol, matchMode };
+  return { freight: r2(freight), boxType, cityPrice, discount, box: selectedBox, numBoxes, boxList, freightExpr, totalUnits, totalProductVol, matchMode };
 }
 
 // --- 4.12 主物流计算 ---
@@ -1216,11 +1234,15 @@ function calcLogistics() {
         // 复合模式：精温部分只算运费（杂费在仓运操作里整单算过了）
         totalCost += precisionResult.freight;
         lines.push({ type: "header", text: "【精温部分】" });
-        lines.push({ type: "line", text: `精温箱型: ${precisionResult.boxType} (内尺寸${precisionResult.box.L}×${precisionResult.box.W}×${precisionResult.box.H}cm, ${precisionResult.totalUnits}件)` });
+        lines.push({ type: "line", text: `精温箱型: ${precisionResult.boxType} (${precisionResult.totalUnits}件)` });
+        for (const _b of precisionResult.boxList) {
+          const _cap = precisionResult.matchMode === "box" ? `, 容量${_b.pb.capacity}盒` : "";
+          lines.push({ type: "line", text: `   ${_b.pb.name}${_b.count > 1 ? "×" + _b.count : ""}: 内尺寸 ${_b.pb.L}×${_b.pb.W}×${_b.pb.H}cm${_cap}` });
+        }
         lines.push({ type: "line", text: `匹配方式: ${precisionResult.matchMode === "box" ? "按盒数容量(纯关护喷雾)" : "按真实尺寸(组合订单混装)"}` });
         lines.push({ type: "line", text: `精温产品: ${fmtProducts(precisionProducts)}` });
         lines.push({ type: "line", text: `精温到达城市: ${state.precisionCity}` });
-        lines.push({ type: "line", text: `精温运费 = ${precisionResult.cityPrice} × ${precisionResult.discount}${precisionResult.numBoxes > 1 ? ' × '+precisionResult.numBoxes+'箱' : ''} = ${fmt(precisionResult.freight)}` });
+        lines.push({ type: "line", text: `精温运费 = (${precisionResult.freightExpr}) × ${precisionResult.discount} = ${fmt(precisionResult.freight)}` });
         lines.push({ type: "result", text: `精温物流费 = ${fmt(precisionResult.freight)} (杂费已含在仓运操作中)` });
       } else {
         // 非复合精温：物流费 = 货运+入库+卸货+仓储+操作+运费 (6项, 无包材)
@@ -1228,11 +1250,15 @@ function calcLogistics() {
         const precisionLogistics = precisionHandling.freight + precisionHandling.inbound + precisionHandling.unload + precisionHandling.storage + precisionHandling.operation + precisionResult.freight;
         totalCost += precisionLogistics;
         lines.push({ type: "header", text: "【精温部分（全部）】" });
-        lines.push({ type: "line", text: `精温箱型: ${precisionResult.boxType} (内尺寸${precisionResult.box.L}×${precisionResult.box.W}×${precisionResult.box.H}cm, ${precisionResult.totalUnits}件)` });
+        lines.push({ type: "line", text: `精温箱型: ${precisionResult.boxType} (${precisionResult.totalUnits}件)` });
+        for (const _b of precisionResult.boxList) {
+          const _cap = precisionResult.matchMode === "box" ? `, 容量${_b.pb.capacity}盒` : "";
+          lines.push({ type: "line", text: `   ${_b.pb.name}${_b.count > 1 ? "×" + _b.count : ""}: 内尺寸 ${_b.pb.L}×${_b.pb.W}×${_b.pb.H}cm${_cap}` });
+        }
         lines.push({ type: "line", text: `匹配方式: ${precisionResult.matchMode === "box" ? "按盒数容量(纯关护喷雾)" : "按真实尺寸(组合订单混装)"}` });
         lines.push({ type: "line", text: `精温产品: ${fmtProducts(precisionProducts)}` });
         lines.push({ type: "line", text: `精温到达城市: ${state.precisionCity}` });
-        lines.push({ type: "line", text: `精温运费 = ${precisionResult.cityPrice} × ${precisionResult.discount}${precisionResult.numBoxes > 1 ? ' × '+precisionResult.numBoxes+'箱' : ''} = ${fmt(precisionResult.freight)}` });
+        lines.push({ type: "line", text: `精温运费 = (${precisionResult.freightExpr}) × ${precisionResult.discount} = ${fmt(precisionResult.freight)}` });
         lines.push({ type: "line", text: `精温杂费: 货运${fmt(precisionHandling.freight)} + 入库${fmt(precisionHandling.inbound)} + 卸货${fmt(precisionHandling.unload)} + 仓储${fmt(precisionHandling.storage)} + 操作${fmt(precisionHandling.operation)} = ${fmt(precisionHandling.freight + precisionHandling.inbound + precisionHandling.unload + precisionHandling.storage + precisionHandling.operation)}` });
         lines.push({ type: "result", text: `精温物流费 = ${fmt(precisionLogistics)} (含操作费, 无包材)` });
       }
